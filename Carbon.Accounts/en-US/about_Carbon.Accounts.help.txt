@@ -1,0 +1,8 @@
+TOPIC
+    about_Carbon.Accounts
+
+SHORT DESCRIPTION
+    Carbon.Accounts is a PowerShell module for...
+
+LONG DESCRIPTION
+    The Carbon.Accounts PowerShell module...
