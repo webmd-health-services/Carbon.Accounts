@@ -1,5 +1,6 @@
 /.output
 /PSModules
+/Carbon.Accounts/Modules
 /.vscode
 /Carbon.Accounts/CHANGELOG.md
 /Carbon.Accounts/LICENSE.txt
