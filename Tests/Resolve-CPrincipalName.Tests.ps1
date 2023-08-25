@@ -1,71 +1,63 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-function Start-TestFixture
-{
-    & (Join-Path -Path $PSScriptRoot -ChildPath '..\Initialize-CarbonTest.ps1' -Resolve)
+#Requires -Version 5.1
+Set-StrictMode -Version 'Latest'
+
+BeforeAll {
+    Set-StrictMode -Version 'Latest'
+
+    & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 }
 
-function Test-ShouldResolveBuiltinIdentity
-{
-    $identity = Resolve-IdentityName -Name 'Administrators'
-    Assert-Equal 'BUILTIN\Administrators' $identity
-}
 
-function Test-ShouldResolveNTAuthorityIdentity
-{
-    $identity = Resolve-IdentityName -Name 'NetworkService'
-    Assert-Equal 'NT AUTHORITY\NETWORK SERVICE' $identity
-}
-
-function Test-ShouldResolveEveryone
-{
-    $identity  = Resolve-IdentityName -Name 'Everyone'
-    Assert-Equal 'Everyone' $identity
-}
-
-function Test-ShouldNotResolveMadeUpName
-{
-    $fullName = Resolve-IdentityName -Name 'IDONotExist'
-    Assert-NoError
-    Assert-Null $fullName
-}
-
-function Test-ShouldResolveLocalSystem
-{
-    Assert-Equal 'NT AUTHORITY\SYSTEM' (Resolve-IdentityName -Name 'localsystem')
-}
-
-function Test-ShouldResolveDotAccounts
-{
-    foreach( $user in (Get-User) )
-    {
-        $id = Resolve-IdentityName -Name ('.\{0}' -f $user.SamAccountName)
-        Assert-Equal ('{0}\{1}' -f $env:COMPUTERNAME,$user.SamAccountName) $id
+Describe 'Resolve-CPrincipalName' {
+    BeforeEach {
+        $Global:Error.Clear()
     }
-}
 
-function Test-ShouldResolveBySid
-{
-    $id = Resolve-CIdentity -Name 'Administrators' -NoWarn
-    Assert-NotNull $id
-    $id = Resolve-IdentityName -Sid $id.Sid.ToString()
-    Assert-Equal 'BUILTIN\Administrators' $id
-}
+    It 'should resolve builtin identity' {
+        $identity = Resolve-CIdentityName -Name 'Administrators'
+        $identity | Should -Be 'BUILTIN\Administrators'
+    }
 
-function Test-ShouldResolveByUnknownSid
-{
-    $id = Resolve-IdentityName -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'
-    Assert-Equal $id 'S-1-5-21-2678556459-1010642102-471947008-1017'
-    Assert-NoError
-}
+    It 'should resolve n t authority identity' {
+        $identity = Resolve-CIdentityName -Name 'NetworkService'
+        $identity | Should -Be 'NT AUTHORITY\NETWORK SERVICE'
+    }
 
+    It 'should resolve everyone' {
+        $identity  = Resolve-CIdentityName -Name 'Everyone'
+        $identity | Should -Be 'Everyone'
+    }
+
+    It 'should not resolve made up name' {
+        $fullName = Resolve-CIdentityName -Name 'IDONotExist'
+        $Global:Error.Count | Should -Be 0
+        $fullName | Should -BeNullOrEmpty
+    }
+
+    It 'should resolve local system' {
+        (Resolve-CIdentityName -Name 'localsystem') | Should -Be 'NT AUTHORITY\SYSTEM'
+    }
+
+    It 'should resolve dot accounts' {
+        foreach( $user in (Get-CUser) )
+        {
+            $id = Resolve-CIdentityName -Name ('.\{0}' -f $user.SamAccountName)
+            $id | Should -Be ('{0}\{1}' -f $env:COMPUTERNAME,$user.SamAccountName)
+        }
+    }
+
+    It 'should resolve by sid' {
+        $id = Resolve-CPrincipal -Name 'Administrators'
+        $id | Should -Not -BeNullOrEmpty
+        $id = Resolve-CIdentityName -Sid $id.Sid.ToString()
+        $id | Should -Be 'BUILTIN\Administrators'
+    }
+
+    It 'should resolve by unknown sid' {
+        $id = Resolve-CIdentityName -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'
+        'S-1-5-21-2678556459-1010642102-471947008-1017' | Should -Be $id
+        $Global:Error.Count | Should -Be 0
+    }
+
+}
