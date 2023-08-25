@@ -16,7 +16,7 @@ function ConvertTo-CSecurityIdentifier
     Resolve-CPrincipal
 
     .LINK
-    Resolve-CIdentityName
+    Resolve-CPrincipalName
 
     .EXAMPLE
     ConvertTo-CSecurityIdentifier -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'

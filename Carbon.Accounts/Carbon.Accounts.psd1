@@ -78,6 +78,7 @@
     FunctionsToExport = @(
         'ConvertTo-CSecurityIdentifier',
         'Resolve-CPrincipal',
+        'Resolve-CPrincipalName',
         'Test-CPrincipal'
     )
 

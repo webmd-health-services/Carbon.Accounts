@@ -31,7 +31,7 @@ function Resolve-CPrincipal
     Test-CPrincipal
 
     .LINK
-    Resolve-CIdentityName
+    Resolve-CPrincipalName
 
     .LINK
     http://msdn.microsoft.com/en-us/library/system.security.principal.securityidentifier.aspx
@@ -43,7 +43,7 @@ function Resolve-CPrincipal
     ConvertTo-CSecurityIdentifier
 
     .LINK
-    Resolve-CIdentityName
+    Resolve-CPrincipalName
 
     .LINK
     Test-CIdentity
