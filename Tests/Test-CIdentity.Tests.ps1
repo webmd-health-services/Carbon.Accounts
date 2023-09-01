@@ -9,10 +9,7 @@ BeforeAll {
 
     & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 
-    $script:user1 = $null
     $script:username = 'CarbonTestUser1'
-    $script:user1 =
-        Install-CUser -Credential (New-CCredential -UserName $script:username -Password 'P@ssw0rd!') -PassThru
 
     function ThenError
     {

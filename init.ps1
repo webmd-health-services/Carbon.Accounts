@@ -16,6 +16,16 @@ Demonstrates how to call this script.
 param(
 )
 
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
 Set-StrictMode -Version 'Latest'
 $ErrorActionPreference = 'Stop'
 $InformationPreference = 'Continue'
+
+prism install
+
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'PSModules\Carbon' -Resolve) `
+              -Function 'Install-CUser', 'New-CCredential'
+
+$username = 'CarbonTestUser1'
+Install-CUser -Credential (New-CCredential -UserName $username -Password 'P@ssw0rd!')

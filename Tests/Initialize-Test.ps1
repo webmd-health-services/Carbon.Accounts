@@ -52,8 +52,8 @@ try
         Import-Module -Name $modulePath
     }
 
-    Import-Module -Name (JOin-Path -Path $PSScriptRoot -ChildPath '..\PSModules\Carbon' -Resolve) `
-                  -Function @('Get-CUser', 'Install-CUser')
+    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath '..\PSModules\Carbon' -Resolve) `
+                  -Function @('Get-CUser')
 }
 finally
 {
