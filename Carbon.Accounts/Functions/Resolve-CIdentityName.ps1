@@ -1,20 +1,20 @@
 
-function Resolve-CPrincipalName
+function Resolve-CIdentityName
 {
     <#
     .SYNOPSIS
-    Determines the full, NT principal name for a user or group.
+    Determines the full, NT identity name for a user or group.
 
     .DESCRIPTION
-    `Resolve-CPrincipalName` resolves a user/group name into its full, canonical name, used by the operating system. For
+    `Resolve-CIdentityName` resolves a user/group name into its full, canonical name, used by the operating system. For
     example, the local Administrators group is actually called BUILTIN\Administrators. With a canonical username, you
-    can unambiguously compare principals on objects that contain user/group information.
+    can unambiguously compare identities on objects that contain user/group information.
 
-    If unable to resolve a name into an principal, `Resolve-CPrincipalName` returns nothing.
+    If unable to resolve a name into an identity, `Resolve-CIdentityName` returns nothing.
 
-    If you want to get full principal information (domain, type, sid, etc.), use `Resolve-CPrincipal`.
+    If you want to get full identity information (domain, type, sid, etc.), use `Resolve-CIdentity`.
 
-    In Carbon 2.0, you can also resolve a SID into its principal name. The `SID` parameter accepts a SID in SDDL form as
+    In Carbon 2.0, you can also resolve a SID into its identity name. The `SID` parameter accepts a SID in SDDL form as
     a `string`, a `System.Security.Principal.SecurityIdentifier` object, or a SID in binary form as an array of bytes.
     If the SID no longer maps to an active account, you'll get the original SID in SDDL form (as a string) returned to
     you.
@@ -23,7 +23,7 @@ function Resolve-CPrincipalName
     ConvertTo-CSecurityIdentifier
 
     .LINK
-    Resolve-CPrincipal
+    Resolve-CIdentity
 
     .LINK
     Test-CIdentity
@@ -38,7 +38,7 @@ function Resolve-CPrincipalName
     string
 
     .EXAMPLE
-    Resolve-CPrincipalName -Name 'Administrators'
+    Resolve-CIdentityName -Name 'Administrators'
 
     Returns `BUILTIN\Administrators`, the canonical name for the local Administrators group.
     #>
@@ -62,10 +62,10 @@ function Resolve-CPrincipalName
 
     if ($PSCmdlet.ParameterSetName -eq 'ByName')
     {
-        return Resolve-CPrincipal -Name $Name -ErrorAction Ignore | Select-Object -ExpandProperty 'FullName'
+        return Resolve-CIdentity -Name $Name -ErrorAction Ignore | Select-Object -ExpandProperty 'FullName'
     }
 
-    $id = Resolve-CPrincipal -Sid $SID -ErrorAction Ignore
+    $id = Resolve-CIdentity -Sid $SID -ErrorAction Ignore
     if ($id)
     {
         return $id.FullName

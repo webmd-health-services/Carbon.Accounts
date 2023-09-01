@@ -13,10 +13,10 @@ function ConvertTo-CSecurityIdentifier
     If the string or byte array don't represent a SID, an error is written and nothing is returned.
 
     .LINK
-    Resolve-CPrincipal
+    Resolve-CIdentity
 
     .LINK
-    Resolve-CPrincipalName
+    Resolve-CIdentityName
 
     .EXAMPLE
     ConvertTo-CSecurityIdentifier -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'

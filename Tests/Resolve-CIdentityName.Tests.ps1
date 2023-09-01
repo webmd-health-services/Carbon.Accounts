@@ -9,53 +9,53 @@ BeforeAll {
 }
 
 
-Describe 'Resolve-CPrincipalName' {
+Describe 'Resolve-CIdentityName' {
     BeforeEach {
         $Global:Error.Clear()
     }
 
     It 'should resolve builtin identity' {
-        $identity = Resolve-CPrincipalName -Name 'Administrators'
+        $identity = Resolve-CIdentityName -Name 'Administrators'
         $identity | Should -Be 'BUILTIN\Administrators'
     }
 
     It 'should resolve n t authority identity' {
-        $identity = Resolve-CPrincipalName -Name 'NetworkService'
+        $identity = Resolve-CIdentityName -Name 'NetworkService'
         $identity | Should -Be 'NT AUTHORITY\NETWORK SERVICE'
     }
 
     It 'should resolve everyone' {
-        $identity  = Resolve-CPrincipalName -Name 'Everyone'
+        $identity  = Resolve-CIdentityName -Name 'Everyone'
         $identity | Should -Be 'Everyone'
     }
 
     It 'should not resolve made up name' {
-        $fullName = Resolve-CPrincipalName -Name 'IDONotExist'
+        $fullName = Resolve-CIdentityName -Name 'IDONotExist'
         $Global:Error.Count | Should -Be 0
         $fullName | Should -BeNullOrEmpty
     }
 
     It 'should resolve local system' {
-        (Resolve-CPrincipalName -Name 'localsystem') | Should -Be 'NT AUTHORITY\SYSTEM'
+        (Resolve-CIdentityName -Name 'localsystem') | Should -Be 'NT AUTHORITY\SYSTEM'
     }
 
     It 'should resolve dot accounts' {
         foreach( $user in (Get-CUser) )
         {
-            $id = Resolve-CPrincipalName -Name ('.\{0}' -f $user.SamAccountName)
+            $id = Resolve-CIdentityName -Name ('.\{0}' -f $user.SamAccountName)
             $id | Should -Be ('{0}\{1}' -f $env:COMPUTERNAME,$user.SamAccountName)
         }
     }
 
     It 'should resolve by sid' {
-        $id = Resolve-CPrincipal -Name 'Administrators'
+        $id = Resolve-CIdentity -Name 'Administrators'
         $id | Should -Not -BeNullOrEmpty
-        $id = Resolve-CPrincipalName -Sid $id.Sid.ToString()
+        $id = Resolve-CIdentityName -Sid $id.Sid.ToString()
         $id | Should -Be 'BUILTIN\Administrators'
     }
 
     It 'should resolve by unknown sid' {
-        $id = Resolve-CPrincipalName -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'
+        $id = Resolve-CIdentityName -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'
         'S-1-5-21-2678556459-1010642102-471947008-1017' | Should -Be $id
         $Global:Error.Count | Should -Be 0
     }

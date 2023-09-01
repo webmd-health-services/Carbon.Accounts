@@ -1,12 +1,12 @@
 
-function Resolve-CPrincipal
+function Resolve-CIdentity
 {
     <#
     .SYNOPSIS
     Gets domain, name, type, and SID information about a user or group.
 
     .DESCRIPTION
-    The `Resolve-CPrincipal` function takes an identity name or security identifier (SID) and gets its canonical
+    The `Resolve-CIdentity` function takes an identity name or security identifier (SID) and gets its canonical
     representation. It returns a `Carbon.Identity` object, which contains the following information about the identity:
 
      * Domain - the domain the user was found in
@@ -28,10 +28,10 @@ function Resolve-CPrincipal
     returned.
 
     .LINK
-    Test-CPrincipal
+    Test-CIdentity
 
     .LINK
-    Resolve-CPrincipalName
+    Resolve-CIdentityName
 
     .LINK
     http://msdn.microsoft.com/en-us/library/system.security.principal.securityidentifier.aspx
@@ -43,45 +43,44 @@ function Resolve-CPrincipal
     ConvertTo-CSecurityIdentifier
 
     .LINK
-    Resolve-CPrincipalName
+    Resolve-CIdentityName
 
     .LINK
     Test-CIdentity
 
     .OUTPUTS
-    Carbon_Accounts_Principal.
+    Carbon_Accounts_Identity.
 
     .EXAMPLE
-    Resolve-CPrincipal -Name 'Administrators'
+    Resolve-CIdentity -Name 'Administrators'
 
     Returns an object representing the `Administrators` group.
 
     .EXAMPLE
-    Resolve-CPrincipal -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'
+    Resolve-CIdentity -SID 'S-1-5-21-2678556459-1010642102-471947008-1017'
 
     Demonstrates how to use a SID in SDDL form to convert a SID into an identity.
 
     .EXAMPLE
-    Resolve-CPrincipal -SID ([Security.Principal.SecurityIdentifier]::New()'S-1-5-21-2678556459-1010642102-471947008-1017')
+    Resolve-CIdentity -SID ([Security.Principal.SecurityIdentifier]::New()'S-1-5-21-2678556459-1010642102-471947008-1017')
 
     Demonstrates that you can pass a `SecurityIdentifier` object as the value of the SID parameter.
 
     .EXAMPLE
-    Resolve-CPrincipal -SID $sidBytes
+    Resolve-CIdentity -SID $sidBytes
 
     Demonstrates that you can use a byte array that represents a SID as the value of the `SID` parameter.
     #>
     [CmdletBinding()]
     param(
-        # The name of the principal to return.
+        # The name of the identity to return.
         [Parameter(Mandatory, ParameterSetName='ByName', Position=0)]
         [string] $Name,
 
-        # The SID of the principal to return. Accepts a SID in SDDL form as a `string`, a
+        # The SID of the identity to return. Accepts a SID in SDDL form as a `string`, a
         # `System.Security.Principal.SecurityIdentifier` object, or a SID in binary form as an array of bytes.
         [Parameter(Mandatory , ParameterSetName='BySid')]
         [Object] $SID
-
     )
 
     Set-StrictMode -Version 'Latest'
@@ -103,18 +102,18 @@ function Resolve-CPrincipal
             Write-Error -Message "SID ""${SID}"" not found." -ErrorAction $ErrorActionPreference
             return
         }
-        return [Carbon_Accounts_Principal]::New($account.ReferencedDomainName, $account.Name, $SID, $account.Use)
+        return [Carbon_Accounts_Identity]::New($account.ReferencedDomainName, $account.Name, $SID, $account.Use)
     }
 
     if ($Name.StartsWith('.\'))
     {
         $username = $Name.Substring(2)
         $Name = "$([Environment]::MachineName)\${username}"
-        $identity = Resolve-CPrincipal -Name $Name
+        $identity = Resolve-CIdentity -Name $Name
         if (-not $identity)
         {
             $Name = "BUILTIN\${username}"
-            $identity = Resolve-CPrincipal -Name $Name
+            $identity = Resolve-CIdentity -Name $Name
         }
         return $identity
     }
@@ -127,7 +126,7 @@ function Resolve-CPrincipal
     $account = Invoke-AdvapiLookupAccountName -AccountName $Name
     if (-not $account)
     {
-        Write-Error -Message "Principal ""${Name}"" not found." -ErrorAction $ErrorActionPreference
+        Write-Error -Message "Identity ""${Name}"" not found." -ErrorAction $ErrorActionPreference
         return
     }
 
@@ -139,6 +138,6 @@ function Resolve-CPrincipal
         $accountName = $domainName
         $domainName = ''
     }
-    return [Carbon_Accounts_Principal]::New($domainName, $accountName, $sid, $account.Use)
+    return [Carbon_Accounts_Identity]::New($domainName, $accountName, $sid, $account.Use)
 
 }

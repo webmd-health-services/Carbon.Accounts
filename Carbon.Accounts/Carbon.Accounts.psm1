@@ -27,12 +27,12 @@ $modulesroot = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
 
 Import-Module -Name (Join-Path -Path $modulesRoot -ChildPath 'PureInvoke' -Resolve)
 
-class Carbon_Accounts_Principal
+class Carbon_Accounts_Identity
 {
-    Carbon_Accounts_Principal( [String] $Domain,
-                               [String] $Name,
-                               [SecurityIdentifier]$Sid,
-                               $Type)
+    Carbon_Accounts_Identity([String] $Domain,
+                             [String] $Name,
+                             [SecurityIdentifier]$Sid,
+                             $Type)
     {
         $this.Domain = $Domain;
         $this.Name = $Name;
@@ -58,7 +58,7 @@ class Carbon_Accounts_Principal
 
     [bool] Equals([Object] $obj)
     {
-        if ($null -eq $obj -or $obj -isnot [Carbon_Accounts_Principal])
+        if ($null -eq $obj -or $obj -isnot [Carbon_Accounts_Identity])
         {
             return $false;
         }

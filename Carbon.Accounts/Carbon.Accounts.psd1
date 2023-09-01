@@ -36,7 +36,7 @@
     Copyright = '(c) WebMD Health Services.'
 
     # Description of the functionality provided by this module
-    Description = 'Manages accounts, principals, users, groups, and privileges.'
+    Description = 'Manages accounts, identities, principals, users, groups, and privileges.'
 
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion = '5.1'
@@ -77,9 +77,9 @@
     # Functions to export from this module. Only list public function here.
     FunctionsToExport = @(
         'ConvertTo-CSecurityIdentifier',
-        'Resolve-CPrincipal',
-        'Resolve-CPrincipalName',
-        'Test-CPrincipal'
+        'Resolve-CIdentity',
+        'Resolve-CIdentityName',
+        'Test-CIdentity'
     )
 
     # Cmdlets to export from this module. By default, you get a script module, so there are no cmdlets.

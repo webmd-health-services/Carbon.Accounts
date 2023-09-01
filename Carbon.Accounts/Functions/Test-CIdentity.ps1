@@ -1,34 +1,34 @@
 
-function Test-CPrincipal
+function Test-CIdentity
 {
     <#
     .SYNOPSIS
     Tests that a name is a valid Windows local or domain user/group.
 
     .DESCRIPTION
-    Uses the Windows `LookupAccountName` function to find a principal.  If it can't be found, returns `$false`.
+    Uses the Windows `LookupAccountName` function to find an identity.  If it can't be found, returns `$false`.
     Otherwise, it returns `$true`.
 
     Use the `PassThru` switch to return a `Carbon.Identity` object (instead of `$true` if the identity exists.
 
     .LINK
-    Resolve-CPrincipal
+    Resolve-CIdentity
 
     .LINK
-    Resolve-CPrincipalName
+    Resolve-CIdentityName
 
     .EXAMPLE
-    Test-CPrincipal -Name 'Administrators
+    Test-CIdentity -Name 'Administrators
 
     Tests that a user or group called `Administrators` exists on the local computer.
 
     .EXAMPLE
-    Test-CPrincipal -Name 'CARBON\Testers'
+    Test-CIdentity -Name 'CARBON\Testers'
 
     Tests that a group called `Testers` exists in the `CARBON` domain.
 
     .EXAMPLE
-    Test-CPrincipal -Name 'Tester' -PassThru
+    Test-CIdentity -Name 'Tester' -PassThru
 
     Tests that a user or group named `Tester` exists and returns a `System.Security.Principal.SecurityIdentifier` object
     if it does.
@@ -46,15 +46,15 @@ function Test-CPrincipal
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    $principal = Resolve-CPrincipal -Name $Name -ErrorAction Ignore
-    if (-not $principal)
+    $identity = Resolve-CIdentity -Name $Name -ErrorAction Ignore
+    if (-not $identity)
     {
         return $false
     }
 
     if ($PassThru)
     {
-        return $principal
+        return $identity
     }
     return $true
 }
