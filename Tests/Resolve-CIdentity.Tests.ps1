@@ -102,4 +102,9 @@ Describe 'Resolve-CIdentity' {
         $Global:Error.Count | Should -BeGreaterThan 0
         $id | Should -BeNullOrEmpty
     }
+
+    It 'is assignable to a string' {
+        [String] $identity = Resolve-CIdentity -Name 'Administrators'
+        $identity | Should -Be 'BUILTIN\Administrators'
+    }
 }

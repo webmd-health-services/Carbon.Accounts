@@ -66,6 +66,10 @@ class Carbon_Accounts_Identity
         return $this.Sid.Equals($obj.Sid);
     }
 
+    [String] ToString()
+    {
+        return $this.FullName
+    }
 }
 
 # Store each of your module's functions in its own file in the Functions
