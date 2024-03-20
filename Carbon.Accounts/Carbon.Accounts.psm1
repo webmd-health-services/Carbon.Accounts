@@ -27,12 +27,26 @@ $modulesroot = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
 
 Import-Module -Name (Join-Path -Path $modulesRoot -ChildPath 'PureInvoke' -Resolve)
 
+enum Carbon_Accounts_Identity_Type
+{
+    User = 1
+    Group
+    Domain
+    Alias
+    WellKnownGroup
+    DeletedAccount
+    Invalid
+    Unknown
+    Computer
+    Label
+}
+
 class Carbon_Accounts_Identity
 {
     Carbon_Accounts_Identity([String] $Domain,
                              [String] $Name,
                              [SecurityIdentifier]$Sid,
-                             $Type)
+                             [Carbon_Accounts_Identity_Type]$Type)
     {
         $this.Domain = $Domain;
         $this.Name = $Name;
@@ -54,7 +68,7 @@ class Carbon_Accounts_Identity
 
     [SecurityIdentifier] $Sid
 
-    $Type
+    [Carbon_Accounts_Identity_Type] $Type
 
     [bool] Equals([Object] $obj)
     {
