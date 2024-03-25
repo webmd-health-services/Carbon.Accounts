@@ -25,7 +25,9 @@ Set-StrictMode -Version 'Latest'
 $script:moduleRoot = $PSScriptRoot
 $modulesroot = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
 
-Import-Module -Name (Join-Path -Path $modulesRoot -ChildPath 'PureInvoke' -Resolve)
+Import-Module -Name (Join-Path -Path $modulesRoot -ChildPath 'PureInvoke' -Resolve) `
+              -Function @('Invoke-AdvapiLookupAccountName', 'Invoke-AdvapiLookupAccountSid') `
+              -Verbose:$false
 
 enum Carbon_Accounts_Identity_Type
 {
