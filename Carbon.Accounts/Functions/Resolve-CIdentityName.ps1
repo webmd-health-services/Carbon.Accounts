@@ -14,10 +14,9 @@ function Resolve-CIdentityName
 
     If you want to get full identity information (domain, type, sid, etc.), use `Resolve-CIdentity`.
 
-    In Carbon 2.0, you can also resolve a SID into its identity name. The `SID` parameter accepts a SID in SDDL form as
-    a `string`, a `System.Security.Principal.SecurityIdentifier` object, or a SID in binary form as an array of bytes.
-    If the SID no longer maps to an active account, you'll get the original SID in SDDL form (as a string) returned to
-    you.
+    You can also resolve a SID into its identity name. The `SID` parameter accepts a SID in SDDL form as a `[String]`, a
+    `[System.Security.Principal.SecurityIdentifier]` object, or a SID in binary form as an array of bytes. If the SID no
+    longer maps to an active account, you'll get the original SID in SDDL form (as a string) returned to you.
 
     .LINK
     ConvertTo-CSecurityIdentifier
@@ -51,8 +50,6 @@ function Resolve-CIdentityName
 
         # Get an identity's name from its SID. Accepts a SID in SDDL form as a `string`, a
         # `System.Security.Principal.SecurityIdentifier` object, or a SID in binary form as an array of bytes.
-        #
-        # This parameter is new in Carbon 2.0.
         [Parameter(Mandatory, ParameterSetName='BySid')]
         $SID
     )

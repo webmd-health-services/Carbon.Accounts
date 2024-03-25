@@ -9,7 +9,8 @@ function Test-CIdentity
     Uses the Windows `LookupAccountName` function to find an identity.  If it can't be found, returns `$false`.
     Otherwise, it returns `$true`.
 
-    Use the `PassThru` switch to return a `Carbon.Identity` object (instead of `$true` if the identity exists.
+    Use the `PassThru` switch to return a `[Carbon_Accounts_Identity]` object (instead of `$true` if the identity
+    exists).
 
     .LINK
     Resolve-CIdentity
@@ -30,8 +31,7 @@ function Test-CIdentity
     .EXAMPLE
     Test-CIdentity -Name 'Tester' -PassThru
 
-    Tests that a user or group named `Tester` exists and returns a `System.Security.Principal.SecurityIdentifier` object
-    if it does.
+    Tests that a user or group named `Tester` exists and returns a `[Carbon_Accounts_Identity]` object if it does.
     #>
     [CmdletBinding()]
     param(

@@ -7,7 +7,8 @@ function Resolve-CIdentity
 
     .DESCRIPTION
     The `Resolve-CIdentity` function takes an identity name or security identifier (SID) and gets its canonical
-    representation. It returns a `Carbon.Identity` object, which contains the following information about the identity:
+    representation. It returns a `Carbon_Accounts_Identity` object, which contains the following information about the
+    identity:
 
      * Domain - the domain the user was found in
      * FullName - the users full name, e.g. Domain\Name
