@@ -40,7 +40,7 @@ function ConvertTo-CSecurityIdentifier
         # `string`, a `System.Security.Principal.SecurityIdentifier` object, or a SID in binary form as an array of
         # bytes.
         [Parameter(Mandatory)]
-        $SID
+        [Object] $SID
     )
 
     Set-StrictMode -Version 'Latest'
