@@ -1,9 +1,9 @@
 {
-	"PSModules": [
+  "PSModules": [
     {
       "name": "PureInvoke",
       "version": "1.0.0-rc1",
       "repositorySourceLocation": "https://www.powershellgallery.com/api/v2"
     }
-	]
+  ]
 }
