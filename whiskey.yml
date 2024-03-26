@@ -2,13 +2,16 @@
 Build:
 - PowerShell:
     ExceptDuring: Clean
-    ScriptBlock: prism install | Format-Table -Auto
+    ScriptBlock: |
+        prism install | Format-Table -Auto
+        prism install -Path '.\Carbon.Accounts' | Format-Table -Auto
 
 - Version:
     Path: Carbon.Accounts\Carbon.Accounts.psd1
     Prerelease:
     - main: ""
     - "*": rc1
+    IncrementPrereleaseVersion: true
 
 # Update the AppVeyor build/version number.
 - Exec:

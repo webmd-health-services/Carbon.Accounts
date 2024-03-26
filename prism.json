@@ -1,4 +1,8 @@
 {
-	"PSModules": [
-	]
+  "PSModules": [
+    {
+      "Name": "Carbon",
+      "Version": "2.*"
+    }
+  ]
 }

@@ -1,0 +1,9 @@
+{
+  "PSModules": [
+    {
+      "Name": "PureInvoke",
+      "Version": "1.*-*"
+    }
+  ],
+  "PSModulesDirectoryName": "Modules"
+}

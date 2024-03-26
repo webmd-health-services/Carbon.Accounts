@@ -1,8 +1,8 @@
 {
   "PSModules": [
     {
-      "name": "Carbon",
-      "version": "2.15.1",
+      "name": "PureInvoke",
+      "version": "1.0.0-rc1",
       "repositorySourceLocation": "https://www.powershellgallery.com/api/v2"
     }
   ]
