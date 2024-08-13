@@ -16,6 +16,9 @@ function Install-CLocalGroupMember
     Windows does not support local nested groups. If the account to add to the group is a local group, the function will
     write an error and not add the account to the group.
 
+    This function uses the Microsoft.PowerShell.LocalAccounts cmdlets, so is not supported on 32-bit PowerShell running
+    on a 64-bit operating system.
+
     .EXAMPLE
     Install-CLocalGroupMember -Name Administrators -Member EMPIRE\DarthVader,EMPIRE\EmperorPalpatine,REBELS\LSkywalker
 
@@ -26,7 +29,7 @@ function Install-CLocalGroupMember
 
     Adds the local NetworkService account to the local TieFighters group.
     #>
-    [CmdletBinding(SupportsShouldProcess=$true)]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         # The group name.
         [Parameter(Mandatory)]
@@ -40,7 +43,7 @@ function Install-CLocalGroupMember
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    if (-not (Test-CLocalGroup -Name $Name))
+    if (-not (Test-CLocalGroup -LiteralName $Name))
     {
         $msg = "Failed to add member to local group ""${Name}"" because local group ""${Name}"" does not exist."
         Write-Error -Message $msg -ErrorAction $ErrorActionPreference
@@ -63,7 +66,7 @@ function Install-CLocalGroupMember
 
         $memberName = $identity.FullName
 
-        if (Test-CLocalGroup -Name $identity.Name)
+        if (Test-CLocalGroup -LiteralName $identity.Name)
         {
             $msg = "Failed to add local group ""${memberName}"" to local group ""${groupName}"" because " +
                    """${memberName}"" is a local group and Windows does not support nested local groups."

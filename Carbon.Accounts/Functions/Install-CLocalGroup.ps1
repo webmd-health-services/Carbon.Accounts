@@ -11,6 +11,9 @@ function Install-CLocalGroup
     created. If it exists, the description is updated. Pass any group members to the `Member` parameter. Those accounts
     will be added to the group. Existing members will be unaffected.
 
+    This function uses the Microsoft.PowerShell.LocalAccounts cmdlets, so is not supported on 32-bit PowerShell running
+    on a 64-bit operating system.
+
     .EXAMPLE
     Install-CLocalGroup -Name TIEFighters -Description 'Users allowed to be TIE fighter pilots.' -Members EMPIRE\Pilots,EMPIRE\DarthVader
 

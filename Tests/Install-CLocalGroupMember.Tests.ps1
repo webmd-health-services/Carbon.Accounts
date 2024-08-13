@@ -123,7 +123,12 @@ Describe 'Install-CLocalGroupMember' {
 
     It 'allows duplicates' {
         $admin = Resolve-CIdentity 'Administrator'
-        Install-CLocalGroup -Name $script:groupName -Member $admin.Name, $admin.FullName
+        Install-CLocalGroupMember -Name $script:groupName -Member $admin.Name, $admin.FullName
         $Global:Error | Should -BeNullOrEmpty
+    }
+
+    It 'validates no wildcard patterns in group name' {
+        Install-CLocalGroupMember -Name "${script:groupName}*" -Member 'Everyone' -ErrorAction SilentlyContinue
+        $Global:Error | Should -Match 'does not exist'
     }
 }

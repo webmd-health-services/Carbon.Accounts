@@ -3,11 +3,14 @@ function Uninstall-CLocalGroup
 {
     <#
     .SYNOPSIS
-    Removes a *local* group.
+    Removes a local group, if it exists.
 
     .DESCRIPTION
     The `Uninstall-CLocalGroup` function removes a local group. Pass the group name to the `Name` parameter. If the
     group exists, it is removed. Otherwise, if the group doesn't exist, nothing happens.
+
+    This function uses the Microsoft.PowerShell.LocalAccounts cmdlets, so is not supported on 32-bit PowerShell running
+    on a 64-bit operating system.
 
     .LINK
     Install-CLocalGroupMember
@@ -43,11 +46,11 @@ function Uninstall-CLocalGroup
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    if( -not (Test-CLocalGroup -Name $Name) )
+    if( -not (Test-CLocalGroup -LiteralName $Name) )
     {
         return
     }
 
     Write-Information "Deleting local group ""${Name}""."
-    Get-LocalGroup -Name $Name | Remove-LocalGroup
+    Get-CLocalGroup -LiteralName $Name | Remove-LocalGroup
 }

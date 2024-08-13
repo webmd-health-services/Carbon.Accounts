@@ -36,4 +36,15 @@ Describe 'Uninstall-CLocalGroup' {
         Uninstall-CLocalGroup -Name $script:groupName -WhatIf
         Test-CLocalGroup -Name $script:groupName | Should -BeTrue
     }
+
+    It 'does not support wildcards' {
+        # Make sure the test that the group exists does not use wildcards.
+        Uninstall-CLocalGroup -Name "${script:groupName}*"
+        Test-CLocalGroup -LiteralName $script:groupName | Should -BeTrue
+
+        # Make sure the command to get the group to delete use wildcards.
+        Mock -CommandName 'Test-CLocalGroup' -ModuleName 'Carbon.Accounts' -MockWith { $true }
+        Uninstall-CLocalGroup -Name "${script:groupName}*"
+        Test-CLocalGroup -LiteralName $script:groupName | Should -BeTrue
+    }
 }

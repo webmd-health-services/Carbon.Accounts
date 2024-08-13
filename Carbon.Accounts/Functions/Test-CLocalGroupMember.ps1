@@ -12,6 +12,9 @@ function Test-CLocalGroupMember
 
     If the group or member don't exist, the function writes an error and return nothing.
 
+    This function uses the Microsoft.PowerShell.LocalAccounts cmdlets, so is not supported on 32-bit PowerShell running
+    on a 64-bit operating system.
+
     .LINK
     Install-CLocalGroupMember
 

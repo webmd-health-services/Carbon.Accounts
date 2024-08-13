@@ -7,8 +7,8 @@
 
 ### Upgrade Instructions
 
-If migrating from Carbon's group functions (`Add-CGroupMember`, `Install-CGroup`, `Remove-CGroupMember`, `Test-CGroup`,
-`Test-CGroupMember`, and `Uninstall-CGroup`):
+If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `Install-CGroup`, `Remove-CGroupMember`,
+`Test-CGroup`, `Test-CGroupMember`, and `Uninstall-CGroup`):
 
 * Functions re-written to use PowerShell's built-in `Microsoft.PowerShell.LocalAccounts` module so they do not support
   running under 32-bit PowerShell on a 64-bit operating system.
@@ -22,6 +22,7 @@ If migrating from Carbon's group functions (`Add-CGroupMember`, `Install-CGroup`
   `Resolve-CIdentity` and if the `Type` property on the returned object is `Alias` and the group is not a domain group,
   it will cause an error.
 * Rename usages of `Add-CGroupMember` to `Install-CLocalGroupMember`.
+* Rename usages of `Get-CGroup` to `Get-CLocalGroup`.
 * Rename usages of `Install-CGroup` to `Install-CLocalGroup`.
 * Rename usages of `Remove-CGroupMember` to `Uninstall-CLocalGroupMember`.
 * Rename usages of `Test-CGroup` to `Test-CLocalGroup`.
@@ -30,6 +31,7 @@ If migrating from Carbon's group functions (`Add-CGroupMember`, `Install-CGroup`
 
 ### Added
 
+* `Get-CLocalGroup` for getting local groups. Has support for non-wildcard lookups.
 * `Install-CLocalGroup` for installing local groups.
 * `Install-CLocalGroupMember` for adding accounts to local groups.
 * `Test-CLocalGroup` for testing if local groups exist.

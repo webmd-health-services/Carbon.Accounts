@@ -77,6 +77,7 @@
     # Functions to export from this module. Only list public function here.
     FunctionsToExport = @(
         'ConvertTo-CSecurityIdentifier',
+        'Get-CLocalGroup',
         'Install-CLocalGroup',
         'Install-CLocalGroupMember',
         'Resolve-CIdentity',

@@ -6,23 +6,28 @@ function Uninstall-CLocalGroupMember
     Removes accounts from a local group, if they are part of the group.
 
     .DESCRIPTION
-    You would think it's pretty easy and straight-forward to remove users/groups from a local group, but you would be wrong.  The quick solution is to use `net localgroup`, but that won't accept user/group names longer than 24 characters.  This means you have to use the .NET Directory Services APIs.  How do you reliably remove both users *and* groups?  What if those users are in a domain?  What if they're in another domain?  What about built-in users?  Fortunately, your brain hasn't exploded.
+    The `Uninstall-CLocalGroupMember` function removes accounts from local groups. Pass the group name to the `Name`
+    parameter. Pass the account names to the `Member` parameter. If the given accounts are in the local group, they are
+    removed. Any account that is not in the group is ignored.
 
-    So, this function removes users or groups from a *local* group.
+    The function writes an error if the group doesn't exist, or if any of the members you're trying to remove from the
+    group don't exist.
 
-    If the user or group is not a member, nothing happens.
-
-    `Uninstall-CLocalGroupMember` is new in Carbon 2.0.
+    This function uses the Microsoft.PowerShell.LocalAccounts cmdlets, so is not supported on 32-bit PowerShell running
+    on a 64-bit operating system.
 
     .EXAMPLE
     Uninstall-CLocalGroupMember -Name Administrators -Member EMPIRE\DarthVader,EMPIRE\EmperorPalpatine,REBELS\LSkywalker
 
-    Removes Darth Vader, Emperor Palpatine and Luke Skywalker from the local administrators group.
+    Demonstrates how to remove multiple accounts from a group by passing multiple account names to the `Member`
+    parameter. In this example, Darth Vader, Emperor Palpatine and Luke Skywalker are removed from the local
+    administrators group.
 
     .EXAMPLE
     Uninstall-CLocalGroupMember -Name TieFighters -Member NetworkService
 
-    Removes the local NetworkService account from the local TieFighters group.
+    Demonstrates how to remove a single account from a group by passing the account name to the `Member` parameter. In
+    this example, the local NetworkService account is removed from the local TieFighters group.
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -38,7 +43,7 @@ function Uninstall-CLocalGroupMember
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    if (-not (Test-CLocalGroup -Name $Name))
+    if (-not (Test-CLocalGroup -LiteralName $Name))
     {
         $msg = "Failed to remove members from local group ""${Name}"" because that group does not exist."
         Write-Error -Message $msg -ErrorAction $ErrorActionPreference

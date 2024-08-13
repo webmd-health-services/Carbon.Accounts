@@ -114,4 +114,11 @@ Describe 'Uninstall-CLocalGroupMember' {
         ThenNoError
         ThenGroup 'FubarSnafu' -HasMember 'Everyone'
     }
+
+    It 'does not support wildcards for group name' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+        WhenRemoving 'Everyone' -FromGroup 'FubarSnafu*' -ErrorAction SilentlyContinue
+        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+        ThenError -Matches 'does not exist'
+    }
 }
