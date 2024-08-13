@@ -3,9 +3,11 @@
 
 # Carbon.Accounts PowerShell Module Changelog
 
-## 1.1.0
+## 2.0.0
 
 ### Upgrade Instructions
+
+New functions are not supported on PowerShell 6, so module's minimum requirement is now PowerShell 7.
 
 If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `Install-CGroup`, `Remove-CGroupMember`,
 `Test-CGroup`, `Test-CGroupMember`, and `Uninstall-CGroup`):

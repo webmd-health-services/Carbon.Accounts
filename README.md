@@ -10,7 +10,7 @@ metadata/information, and works with SIDs (security identifiers).
 
 * Most functions are Windows-only.
 * Windows PowerShell 5.1 and .NET 4.6.1+
-* PowerShell Core 6+
+* PowerShell Core 7+
 
 Note that local group functions are not supported on 32-bit PowerShell on a 64-bit operating system.
 
