@@ -6,26 +6,13 @@ Set-StrictMode -Version 'Latest'
 BeforeAll {
     Set-StrictMode -Version 'Latest'
 
-    & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-CarbonTest.ps1' -Resolve)
+    & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 
-    $GroupName = 'AddMemberToGroup'
-    $user2 = $null
+    $script:groupName = 'AddMemberToGroup'
+    Install-CLocalGroup -Name $script:groupName -Description "Carbon Install-CLocalGroupMember."
 
-    $user1 = $CarbonTestUser
-    $user2 = Install-User -Credential (New-Credential -UserName 'CarbonTestUser2' -Password 'P@ssw0rd!') -PassThru
-
-    function Assert-ContainsLike
-    {
-        param(
-            [string]$Haystack,
-            [string]$Needle
-        )
-
-        $pattern = '*{0}*' -f $Needle
-        $Haystack |
-            Where-Object { $_ -like $pattern } |
-            Should -Not -BeNullOrEmpty
-    }
+    $script:user1 = $CarbonTestUser
+    $script:user2 = $CarbonTestUser2
 
     function Assert-MembersInGroup
     {
@@ -33,72 +20,32 @@ BeforeAll {
             [string[]]$Member
         )
 
-        $group = Get-Group -Name $GroupName
-        if( -not $group )
+        foreach ($_member in $Member)
         {
-            return
+            Get-LocalGroupMember -Name $script:groupName -Member $_member | Should -Not -BeNullOrEmpty
         }
-
-        try
-        {
-            $group | Should -Not -BeNullOrEmpty
-            $Member |
-                ForEach-Object { Resolve-Identity -Name $_ -NoWarn } |
-                ForEach-Object {
-                    $identity = $_
-                    $members = $group.Members | Where-Object { $_.Sid -eq $identity.Sid }
-                    $members | Should -Not -BeNullOrEmpty
-                }
-        }
-        finally
-        {
-            $group.Dispose()
-        }
-    }
-
-    function Remove-Group
-    {
-        $group = Get-Group -Name $GroupName
-        try
-        {
-            if( $group )
-            {
-                net localgroup $GroupName /delete
-            }
-        }
-        finally
-        {
-            if( $group )
-            {
-                $group.Dispose()
-            }
-        }
-    }
-
-    function Get-LocalUsers
-    {
-        return Invoke-CPrivateCommand -Name 'Get-CCimInstance' -Parameter @{Class = 'Win32_UserAccount'; Filter = "LocalAccount=True"} |
-                    Where-Object { $_.Name -ne $env:COMPUTERNAME }
     }
 
     function Invoke-AddMembersToGroup($Members = @())
     {
-        Add-GroupMember -Name $GroupName -Member $Members
+        Install-CLocalGroupMember -Name $script:groupName -Member $Members
         Assert-MembersInGroup -Member $Members
     }
 
 }
 
+AfterAll {
+    Remove-LocalGroup -Name $script:groupName
+}
 
-Describe 'Add-GroupMember' {
+
+Describe 'Install-CLocalGroupMember' {
 
     BeforeEach {
         $Global:Error.Clear()
-        Install-Group -Name $GroupName -Description "Group for testing the Add-MemberToGroup Carbon function."
-    }
 
-    AfterEach {
-        Remove-Group
+        Get-LocalGroupMember -Name $script:groupName |
+            ForEach-Object { Remove-LocalGroupMember -Name $script:groupName -Member $_ }
     }
 
     $skip = (Test-Path -Path 'env:WHS_CI') -and $env:WHS_CI -eq 'True'
@@ -108,7 +55,7 @@ Describe 'Add-GroupMember' {
     }
 
     It 'should add local user' {
-        $users = Get-LocalUsers
+        $users = Get-LocalUser
         if( -not $users )
         {
             Fail "This computer has no local user accounts."
@@ -124,90 +71,59 @@ Describe 'Add-GroupMember' {
     }
 
     It 'should add multiple members' {
-        $members = @( $user1.UserName, $user2.SamAccountName )
+        $members = @( $script:user1, $script:user2 )
         Invoke-AddMembersToGroup -Members $members
     }
 
     It 'should support should process' {
-        Add-GroupMember -Name $GroupName -Member $user1.UserName -WhatIf
-        $details = net localgroup $GroupName
+        Install-CLocalGroupMember -Name $script:groupName -Member $script:user1 -WhatIf
+        $details = net localgroup $script:groupName
         foreach( $line in $details )
         {
-            ($details -like ('*{0}*' -f $user1.UserName)) | Should -BeFalse
+            ($details -like ('*{0}*' -f $script:user1)) | Should -BeFalse
         }
     }
 
     It 'should add network service' {
-        Add-GroupMember -Name $GroupName -Member 'NetworkService'
-        $details = net localgroup $GroupName
-        Assert-ContainsLike $details 'NT AUTHORITY\Network Service'
+        Install-CLocalGroupMember -Name $script:groupName -Member 'NetworkService'
+        Test-CLocalGroupMember -Name $script:groupName -Member 'Network Service' | Should -BeTrue
     }
 
-    It 'should detect if network service already member of group' {
-        Add-GroupMember -Name $GroupName -Member 'NetworkService'
-        Add-GroupMember -Name $GroupName -Member 'NetworkService'
-        $Error.Count | Should -Be 0
+    It 'handles accounts that are already group members' {
+        Install-CLocalGroupMember -Name $script:groupName -Member 'NetworkService'
+        Install-CLocalGroupMember -Name $script:groupName -Member 'NetworkService'
+        $Global:Error | Should -BeNullOrEmpty
     }
 
-    It 'should add administrators' {
-        Add-GroupMember -Name $GroupName -Member 'Administrators'
-        $details = net localgroup $GroupName
-        Assert-ContainsLike $details 'Administrators'
-    }
-
-    It 'should detect if administrators already member of group' {
-        Add-GroupMember -Name $GroupName -Member 'Administrators'
-        Add-GroupMember -Name $GroupName -Member 'Administrators'
-        $Error.Count | Should -Be 0
-    }
-
-    It 'should add anonymous logon' {
-        Add-GroupMember -Name $GroupName -Member 'ANONYMOUS LOGON'
-        $details = net localgroup $GroupName
-        Assert-ContainsLike $details 'NT AUTHORITY\ANONYMOUS LOGON'
-    }
-
-    It 'should detect if anonymous logon already member of group' {
-        Add-GroupMember -Name $GroupName -Member 'ANONYMOUS LOGON'
-        Add-GroupMember -Name $GroupName -Member 'ANONYMOUS LOGON'
-        $Error.Count | Should -Be 0
-    }
-
-    It 'should add everyone' {
-        Add-GroupMember -Name $GroupName -Member 'Everyone'
-        $Error.Count | Should -Be 0
-        Assert-MembersInGroup 'Everyone'
-    }
-
-    It 'should add NT service accounts' {
-        if( (Test-Identity -Name 'NT Service\Fax' -NoWarn) )
-        {
-            Add-GroupMember -Name $GroupName -Member 'NT SERVICE\Fax'
-            $Error.Count | Should -Be 0
-            Assert-MembersInGroup 'NT SERVICE\Fax'
-        }
-    }
-
-    It 'should refuse to add local group to local group' {
-        Add-GroupMember -Name $GroupName -Member $GroupName -ErrorAction SilentlyContinue
-        $Error.Count | Should -Be 2
-        $Error[0].Exception.Message | Should -BeLike '*Failed to add*'
+    $builtinAccounts = @('Administrators', 'Power Users', 'Remote Desktop Users', 'Users')
+    It 'refuses to add builtin local group "<_>" to local group' -ForEach $builtinAccounts {
+        Install-CLocalGroupMember -Name $script:groupName -Member $_ -ErrorAction SilentlyContinue
+        $Global:Error | Should -Match 'does not support nested local groups'
     }
 
     It 'should not add non existent member' {
-        $Error.Clear()
-        $groupBefore = Get-Group -Name $GroupName
-        try
-        {
-            Add-GroupMember -Name $GroupName -Member 'FJFDAFJ' -ErrorAction SilentlyContinue
-            $Error.Count | Should -Be 1
-            $groupAfter = Get-Group -Name $GroupName
-            $groupAfter.Members.Count | Should -Be $groupBefore.Members.Count
-        }
-        finally
-        {
-            $groupBefore.Dispose()
-        }
+        $numMembersBefore =
+            Get-LocalGroupMember -Group $script:groupName | Measure-Object | Select-Object -ExpandProperty 'Count'
+        Install-CLocalGroupMember -Name $script:groupName -Member 'FJFDAFJ' -ErrorAction SilentlyContinue
+        Get-LocalGroupMember -Group $script:groupName | Measure-Object | Select-Object -ExpandProperty 'Count' |
+            Should -Be $numMembersBefore
     }
 
+    $wellKnownAccounts = @('Everyone', 'Authenticated Users', 'ANONYMOUS LOGON', 'Fax', 'NetworkService')
+    It 'allows local well known group "<_>"' -ForEach $wellKnownAccounts {
+        if (-not (TEst-CIdentity -Name $_))
+        {
+            return
+        }
+
+        Install-CLocalGroupMember -Name $script:groupName -Member $_
+        $Global:Error | Should -BeNullOrEmpty
+        Test-CLocalGroupMember -Name $script:groupName -Member $_ | Should -BeTrue
+    }
+
+    It 'allows duplicates' {
+        $admin = Resolve-CIdentity 'Administrator'
+        Install-CLocalGroup -Name $script:groupName -Member $admin.Name, $admin.FullName
+        $Global:Error | Should -BeNullOrEmpty
+    }
 }

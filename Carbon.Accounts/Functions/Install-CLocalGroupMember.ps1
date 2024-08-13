@@ -1,89 +1,88 @@
 
-function Add-CGroupMember
+function Install-CLocalGroupMember
 {
     <#
     .SYNOPSIS
-    Adds a users or groups to a *local* group.
+    Adds users or groups to a local group, if they aren't already in the group.
 
     .DESCRIPTION
-    You would think it's pretty easy and straight-forward to add users/groups to a local group, but you would be wrong.  The quick solution is to use `net localgroup`, but that won't accept user/group names longer than 24 characters.  This means you have to use the .NET Directory Services APIs.  How do you reliably add both users *and* groups?  What if those users are in a domain?  What if they're in another domain?  What about built-in users?  Fortunately, you're brain hasn't exploded.
+    The `Install-CLocalGroupMember` adds an account to a local group. If the account is already in the group, nothing
+    happens. Pass the name of the group to the `Name` parameter. Pass one or more account names to the `Member`
+    parameter.
 
-    So, this function adds users and groups to a *local* group.
+    If the local group doesn't exist, the function writes an error and does no work. If any of the accounts being added
+    to the group don't exist, an error is written for each. Accounts that exist are still added to the group.
 
-    If the members are already part of the group, nothing happens.
-
-    The user running this function must have access to the directory where each principal in the `Member` parameter and the directory where each of the group's current members are located.
+    Windows does not support local nested groups. If the account to add to the group is a local group, the function will
+    write an error and not add the account to the group.
 
     .EXAMPLE
-    Add-CGroupMember -Name Administrators -Member EMPIRE\DarthVader,EMPIRE\EmperorPalpatine,REBELS\LSkywalker
+    Install-CLocalGroupMember -Name Administrators -Member EMPIRE\DarthVader,EMPIRE\EmperorPalpatine,REBELS\LSkywalker
 
     Adds Darth Vader, Emperor Palpatine and Luke Skywalker to the local administrators group.
 
     .EXAMPLE
-    Add-CGroupMember -Name TieFighters -Member NetworkService
+    Install-CLocalGroupMember -Name TieFighters -Member NetworkService
 
     Adds the local NetworkService account to the local TieFighters group.
     #>
     [CmdletBinding(SupportsShouldProcess=$true)]
     param(
-        [Parameter(Mandatory=$true)]
-        [string]
         # The group name.
-        $Name,
+        [Parameter(Mandatory)]
+        [String] $Name,
 
-        [Parameter(Mandatory=$true)]
-        [string[]]
         # The users/groups to add to a group.
-		[Alias('Members')]
-        $Member
+        [Parameter(Mandatory)]
+        [String[]] $Member
     )
 
     Set-StrictMode -Version 'Latest'
-
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    [DirectoryServices.AccountManagement.GroupPrincipal]$group = Get-CGroup -Name $Name
-    if( -not $group )
+    if (-not (Test-CLocalGroup -Name $Name))
     {
+        $msg = "Failed to add member to local group ""${Name}"" because local group ""${Name}"" does not exist."
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
         return
     }
 
-    try
+    $groupInfo = Resolve-CIdentity -Name $Name
+    $localGroupName = $groupInfo.Name
+    $groupName = $groupInfo.FullName
+
+    $prefix = "Adding member to local group ""${localGroupName}""  "
+
+    foreach( $_member in $Member )
     {
-        foreach( $_member in $Member )
+        $identity = Resolve-CIdentity -Name $_member
+        if (-not $identity)
         {
-            $identity = Resolve-CIdentity -Name $_member -NoWarn
-            if( -not $identity )
-            {
-                continue
-            }
-
-            if( (Test-CGroupMember -GroupName $group.Name -Member $_member) )
-            {
-                continue
-            }
-
-            Write-Verbose -Message ('[{0}] Members       -> {1}' -f $Name,$identity.FullName)
-            if( -not $PSCmdlet.ShouldProcess(('adding ''{0}'' to local group ''{1}''' -f $identity.FullName, $group.Name), $null, $null) )
-            {
-                continue
-            }
-
-            try
-            {
-                $identity.AddToLocalGroup( $group.Name )
-            }
-            catch
-            {
-                Write-Error ('Failed to add ''{0}'' to group ''{1}'': {2}.' -f $identity,$group.Name,$_)
-            }
+            continue
         }
-    }
-    finally
-    {
-        $group.Dispose()
+
+        $memberName = $identity.FullName
+
+        if (Test-CLocalGroup -Name $identity.Name)
+        {
+            $msg = "Failed to add local group ""${memberName}"" to local group ""${groupName}"" because " +
+                   """${memberName}"" is a local group and Windows does not support nested local groups."
+            Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+            continue
+        }
+
+        if ((Test-CLocalGroupMember -Name $groupName -Member $_member))
+        {
+            continue
+        }
+
+        if (-not $PSCmdlet.ShouldProcess("local group ${groupName}", "add member ${memberName}"))
+        {
+            continue
+        }
+
+        Write-Information "${prefix}+ ${memberName}"
+        $prefix = ' ' * $prefix.Length
+        Add-LocalGroupMember -Name $Name -Member $identity.FullName
     }
 }
-
-Set-Alias -Name 'Add-GroupMembers' -Value 'Add-CGroupMember'
-

@@ -1,77 +1,80 @@
 
-function Test-CGroupMember
+function Test-CLocalGroupMember
 {
     <#
     .SYNOPSIS
-    Tests if a user or group is a member of a *local* group.
+    Tests if an account is a member of a local group.
 
     .DESCRIPTION
-    The `Test-CGroupMember` function tests if a user or group is a member of a *local* group using [.NET's DirectoryServices.AccountManagement APIs](https://msdn.microsoft.com/en-us/library/system.directoryservices.accountmanagement.aspx). If the group or member you want to check don't exist, you'll get errors and `$null` will be returned. If `Member` is in the group, `$true` is returned. If `Member` is not in the group, `$false` is returned.
+    The `Test-CLocalGroupMember` function tests if a user or group is a member of a local group. Pass the group name to
+    the `Name` parameter. Pass the account name to the `Member` parameter. The function returns `$true` if the member is
+    in the group, `$false` otherwise.
 
-    The user running this function must have permission to access whatever directory the `Member` is in and whatever directory current members of the group are in.
-
-    This function was added in Carbon 2.1.0.
-
-    .LINK
-    Add-CGroupMember
+    If the group or member don't exist, the function writes an error and return nothing.
 
     .LINK
-    Install-CGroup
+    Install-CLocalGroupMember
 
     .LINK
-    Remove-CGroupMember
+    Install-CLocalGroup
 
     .LINK
-    Test-CGroup
+    Uninstall-CLocalGroupMember
 
     .LINK
-    Uninstall-CGroup
+    Test-CLocalGroup
+
+    .LINK
+    Uninstall-CLocalGroup
 
     .EXAMPLE
-    Test-CGroupMember -GroupName 'SithLords' -Member 'REBELS\LSkywalker'
+    Test-CLocalGroupMember -Name 'SithLords' -Member 'REBELS\LSkywalker'
 
-    Demonstrates how to test if a user is a member of a group. In this case, it tests if `REBELS\LSkywalker` is in the local `SithLords`, *which obviously he isn't*, so `$false` is returned.
+    Demonstrates how to test if a user is a member of a group. In this case, it tests if `REBELS\LSkywalker` is in the
+    local `SithLords`, *which obviously he isn't*, so `$false` is returned.
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]
-        [string]
         # The name of the group whose membership is being tested.
-        $GroupName,
+        [Parameter(Mandatory)]
+        [String] $Name,
 
-        [Parameter(Mandatory=$true)]
-        [string]
         # The name of the member to check.
-        $Member
+        [Parameter(Mandatory)]
+        [String] $Member
     )
 
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    if( -not (Test-CGroup -Name $GroupName) )
+    # PowerShell's local account cmdlets don't accept names with local machine name prefix.
+    $groupInfo = Resolve-CIdentity -Name $Name
+    if (-not $groupInfo)
     {
-        Write-Error -Message ('Group ''{0}'' not found.' -f $GroupName)
+        Write-Error -Message "Local group ""${Name}"" does not exist." -ErrorAction $ErrorActionPreference
         return
     }
 
-    $group = Get-CGroup -Name $GroupName
-    if( -not $group )
-    {
-        return
-    }
-
-    $principal = Resolve-CIdentity -Name $Member -NoWarn
-    if( -not $principal )
+    $group = Get-LocalGroup -Name $groupInfo.Name
+    if (-not $group)
     {
         return
     }
 
-    try
+    $principal = Resolve-CIdentity -Name $Member
+    if (-not $principal)
     {
-        return $principal.IsMemberOfLocalGroup($group.Name)
+        return
     }
-    catch
+
+    $existingMember =
+        Get-LocalGroupMember -Name $groupInfo.Name |
+        ForEach-Object { Resolve-CIdentityName -Name $_.Name } |
+        Where-Object { $_ -eq $principal.FullName }
+    if ($existingMember)
     {
-        Write-Error -Message ('Checking if "{0}" is a member of local group "{1}" failed: {2}' -f $principal.FullName,$group.Name,$_)
+        return $true
     }
+
+    return $false
 }

@@ -1,111 +1,68 @@
 
-function Install-CGroup
+function Install-CLocalGroup
 {
     <#
     .SYNOPSIS
     Creates a new local group, or updates the settings for an existing group.
 
     .DESCRIPTION
-    `Install-CGroup` creates a local group, or, updates a group that already exists.
-
-    YOu can get a `System.DirectoryServices.AccountManagement.GroupPrincipal` object representing the group returned to you by using the `PassThru` switch. This object implements the `IDisposable` interface, which means it uses external resources that don't get garbage collected. When you're done using the object, make sure you call `Dispose()` to free those resources, otherwise you'll leak memory. All over the place.
+    `Install-CLocalGroup` creates a local group, or, updates a group that already exists. Pass the group's name to the
+    `Name` parameter and the group's description to the `Description` parameter. If the group doesn't exist, it is
+    created. If it exists, the description is updated. Pass any group members to the `Member` parameter. Those accounts
+    will be added to the group. Existing members will be unaffected.
 
     .EXAMPLE
-    Install-CGroup -Name TIEFighters -Description 'Users allowed to be TIE fighter pilots.' -Members EMPIRE\Pilots,EMPIRE\DarthVader
+    Install-CLocalGroup -Name TIEFighters -Description 'Users allowed to be TIE fighter pilots.' -Members EMPIRE\Pilots,EMPIRE\DarthVader
 
-    If the TIE fighters group doesn't exist, it is created with the given description and default members.  If it already exists, its description is updated and the given members are added to it.
+    If the TIE fighters group doesn't exist, it is created with the given description and default members.  If it
+    already exists, its description is updated and the given members are added to it.
     #>
-    [CmdletBinding(SupportsShouldProcess=$true)]
-    [OutputType([DirectoryServices.AccountManagement.GroupPrincipal])]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
-        [Parameter(Mandatory=$true)]
-        [string]
         # The name of the group.
-        $Name,
-        
-        [string]
-        # A description of the group.
-        $Description = '',
-        
-        [Alias('Members')]
-        [string[]]
-        # Members of the group.
-        $Member = @(),
+        [Parameter(Mandatory)]
+        [String] $Name,
 
-        [Switch]
-        # Return the group as a `System.DirectoryServices.AccountManagement.GroupPrincipal`.
-        #
-        # This object uses external resources that don't get cleaned up by .NET's garbage collector. In order to avoid memory leaks, make sure you call its `Dispose()` method when you're done with it.
-        $PassThru
+        # A description of the group.
+        [String] $Description = '',
+
+        # Members of the group.
+        [String[]] $Member = @()
     )
-    
+
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
-    
-    $group = Get-CGroup -Name $Name -ErrorAction Ignore
 
-    if( $group )
-    {
-        $ctx = $group.Context
-    }
-    else
-    {
-        $ctx = New-Object 'DirectoryServices.AccountManagement.PrincipalContext' ([DirectoryServices.AccountManagement.ContextType]::Machine)
-    }
+    $group = Get-LocalGroup -Name $Name -ErrorAction Ignore
 
-    $operation = 'update'
-    $save = $false
-    $new = $false
-    if( -not $group )
+    if (-not $group)
     {
-        $operation = 'create'
-        $new = $true
-        $group = New-Object 'DirectoryServices.AccountManagement.GroupPrincipal' $ctx
-        $group.Name = $Name
-        $group.Description = $Description
-        $save = $true
-    }
-    else
-    {
-        # We only update the description if one or the other has a value. This guards against setting description to $null from empty string and vice-versa.
-        if( $group.Description -ne $Description -and ($group.Description -or $Description) )
+        $descMsg = '.'
+        if ($Description)
         {
-            Write-Verbose -Message ('[{0}] Description  {1} -> {2}' -f $Name,$group.Description,$Description)
-            $group.Description = $Description
-            $save = $true
-        }
-    }
-
-    try
-    {
-
-        if( $save -and $PSCmdlet.ShouldProcess( ('local group {0}' -f $Name), $operation ) )
-        {
-            if( $new )
+            $descMsg = ": ${Description}"
+            if (-not $descMsg.EndsWith('.'))
             {
-                Write-Verbose -Message ('[{0}]              +' -f $Name)
+                $descMsg = "${descMsg}."
             }
-            $group.Save()
         }
 
-        if( $Member -and $PSCmdlet.ShouldProcess( ('local group {0}' -f $Name), 'adding members' ) )
+        Write-Information "Creating local group ""${Name}""${descMsg}"
+        New-LocalGroup -Name $Name -Description $Description
+    }
+    else
+    {
+        if ($Description -and $group.Description -ne $Description)
         {
-            Add-CGroupMember -Name $Name -Member $Member
-        }
-    
-        if( $PassThru )
-        {
-            return $group
+            $groupName = Resolve-CIdentityName -Name $group.Name
+            $msg = "Updating local group ""${groupName}"" description.  ""$($group.Description)"" -> ""${Description}"""
+            Write-Information $msg
+            $group | Set-LocalGroup -Description $Description
         }
     }
-    finally
-    {
-        if( -not $PassThru )
-        {
-            $group.Dispose()
-            $ctx.Dispose()
-        }
 
+    if ($Member)
+    {
+        Install-CLocalGroupMember -Name $Name -Member $Member
     }
 }
-

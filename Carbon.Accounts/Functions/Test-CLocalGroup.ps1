@@ -1,50 +1,47 @@
 
-function Test-CGroup
+function Test-CLocalGroup
 {
     <#
     .SYNOPSIS
-    Checks if a *local* group exists.
+    Checks if a local group exists.
 
     .DESCRIPTION
-    Uses .NET's AccountManagement API to check if a *local* group exists.  Returns `True` if the *local* account exists, or `False` if it doesn't.
+    The `Test-CLocalGroup` function tests if a local group exists. Pass the group name to the `Name` parameter. Returns
+    `$true` if the group exists, `$false` otherwise.
 
     .OUTPUTS
     System.Boolean
 
     .LINK
-    Get-CGroup
+    Get-CLocalGroup
 
     .LINK
-    Install-CGroup
+    Install-CLocalGroup
 
     .LINK
-    Uninstall-CGroup
+    Uninstall-CLocalGroup
 
     .EXAMPLE
-    Test-CGroup -Name RebelAlliance
+    Test-CLocalGroup -Name 'RebelAlliance'
 
-    Checks if the `RebelAlliance` *local* group exists.  Returns `True` if it does, `False` if it doesn't.
+    Checks if the `RebelAlliance` local group exists.  Returns `$true` if it does, `$false` if it doesn't.
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]
-        [string]
         # The name of the *local* group to check.
-        $Name
+        [Parameter(Mandatory)]
+        [String] $Name
     )
 
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
-    
-    $group = Get-CGroup -Name $Name -ErrorAction Ignore
-    if( $group )
+
+    $group = Get-LocalGroup -Name $Name -ErrorAction Ignore
+    if ($group)
     {
-        $group.Dispose()
         return $true
     }
-    else
-    {
-        return $false
-    }
+
+    return $false
 }
 

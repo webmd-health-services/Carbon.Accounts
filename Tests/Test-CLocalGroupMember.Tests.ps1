@@ -1,68 +1,63 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
+#Requires -Version 5.1
 Set-StrictMode -Version 'Latest'
 
-& (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-CarbonTest.ps1')
+BeforeAll {
+    Set-StrictMode -Version 'Latest'
+    & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1')
 
-# I know, these should be inside the describe block, but when inside the describe block
-#     the variables are unable to be resolved
-$groupName = 'TestGroupMember01'
-$userName = 'TestGroupMemberUser'
-$userPass = 'P@ssw0rd!'
-$description = 'Used by Test-GroupMember.Tests.ps1'
+    $script:groupName = 'Test-CLocalGroupMember'
+    $script:description = 'Used by Test-CLocalGroupMember.Tests.ps1'
 
-describe Test-GroupMember {
-    
-    BeforeAll {
-        Install-Group -Name $groupName -Description $description
+    Install-CLocalGroup -Name $script:groupName -Description $script:description
 
-        $testUserCred = New-Credential -UserName $userName -Password $userPass
-        Install-User -Credential $testUserCred -Description $description
+    Install-CLocalGroupMember -Name $script:groupName -Member $CarbonTestUser
+}
 
-        Add-GroupMember -Name $groupName -Member $userName
-    }
+AfterAll {
+    Uninstall-CLocalGroup -Name 'Test-CLocalGroupMember'
+}
 
-    AfterAll {
-        Uninstall-User -Username $userName
-        Uninstall-Group -Name $groupName
-    }
-
+Describe 'Test-CLocalGroupMember' {
     BeforeEach {
         $Global:Error.Clear()
     }
 
     It 'should find a group member' {
-        $result = Test-GroupMember -GroupName $groupName -Member $userName
-        $result | Should Be $true
-        $Global:Error.Count | Should Be 0
+        $result = Test-CLocalGroupMember -Name $script:groupName -Member $CarbonTestUser
+        $result | Should -BeTrue
+        $Global:Error | Should -BeNullOrEmpty
     }
 
     It 'should not find a group member' {
-        $user = Get-User | Select-Object -First 1
-        $User | Should Not BeNullOrEmpty
-        Test-GroupMember -GroupName $groupName -Member $user | Should Be $false
-        $Global:Error.Count | Should Be 0
+        Test-CLocalGroupMember -Name $script:groupName -Member 'Authenticated Users' | Should -BeFalse
+        $Global:Error | Should -BeNullOrEmpty
     }
 
     It 'should not find a non existent user' {
-        $result = Test-GroupMember -GroupName $groupName -Member 'nonExistantUser' -ErrorAction SilentlyContinue
-        $result | Should BeNullOrEmpty
-        $Global:Error[0] | Should Match 'identity.*not found'
+        $result = Test-CLocalGroupMember -Name $script:groupName -Member 'nonExistantUser' -ErrorAction SilentlyContinue
+        $result | Should -BeNullOrEmpty
+        $Global:Error[0] | Should -Match 'identity.*not found'
     }
 
-    It 'should write an error if group does not exist' {
-        $result = Test-GroupMember -GroupName 'oiuewldsanfds' -Member 'snafufubar' -ErrorAction SilentlyContinue
-        $result | Should BeNullOrEmpty
-        $Global:Error[0] | Should Match 'group.*not found'
+    It 'validates group exists' {
+        $result = Test-CLocalGroupMember -Name 'oiuewldsanfds' -Member 'Authenticated Users' -ErrorAction SilentlyContinue
+        $result | Should -BeNullOrEmpty
+        $Global:Error[0] | Should -Match 'does not exist'
+    }
+
+    It 'validates member exists' {
+        $result = Test-CLocalGroupMember -Name $script:groupName `
+                                         -Member 'fjksmlkrwwum' `
+                                         -ErrorAction SilentlyContinue
+        $result | Should -BeNullOrEmpty
+        $Global:Error[0] | Should -Match 'not found'
+    }
+
+    It 'supports machine prefixed account name' {
+        Install-CLocalGroupMember -Name $script:groupName -Member 'Administrator'
+        $identity = Resolve-CIdentity -Name 'Administrator'
+        Test-CLocalGroupMember -Name $script:groupName -Member $identity.FullName | Should -BeTrue
+        $Global:Error | Should -BeNullOrEmpty
     }
 }

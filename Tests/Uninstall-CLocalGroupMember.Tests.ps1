@@ -1,168 +1,117 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-& (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-CarbonTest.ps1' -Resolve)
+#Requires -Version 5.1
+Set-StrictMode -Version 'Latest'
 
-function Init
-{
-}
+BeforeAll {
+    Set-StrictMode -Version 'Latest'
 
-function GivenGroup
-{
-    param(
-        $Name,
-        $WithMember
-    )
+    & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 
-    GivenUser -UserName $WithMember
-
-    $WithMember = $WithMember | ForEach-Object { Resolve-IdentityName -Name $_ -NoWarn }
-
-    Install-Group -Name $Name -Description ('Carbon.{0} test group.' -f ($PSCommandPath | Split-Path -Leaf))
-    $group = Get-Group -Name $Name
-    $membersToRemove = $group.Members |
-                        Where-Object {
-                                        $currentMemberName = Resolve-Identity -SID $_.Sid -NoWarn
-                                        return ($currentMemberName -notin $WithMember )
-                                    }
-
-    foreach( $memberToRemove in $membersToRemove )
+    function GivenGroup
     {
-        $group.Members.Remove($memberToRemove)
+        param(
+            $Name,
+            $WithMember
+        )
+
+        Uninstall-CLocalGroup -Name $Name
+        Install-CLocalGroup -Name $Name -Description 'Carbon.Accounts test group.' -Member $WithMember
     }
 
-    $group.Save()
-    $group.Dispose()
-
-    Add-GroupMember -Name $Name -Member $WithMember
-}
-
-function GivenUser
-{
-    param(
-        $UserName
-    )
-
-    foreach( $member in $UserName )
+    function ThenError
     {
-        Install-User -Credential (New-Credential -UserName $member -Password 'UVjh9DXN8YqD') -Description ('Carbon.{0} test user.' -f ($PSCommandPath | Split-Path -Leaf))
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidAssignmentToAutomaticVariable', '')]
+        param(
+            $Matches
+        )
+
+        $Global:Error | Should -Match $Matches
     }
-}
 
-function ThenError
-{
-    param(
-        $Matches
-    )
+    function ThenNoError
+    {
+        param(
+        )
 
-    It ('should write no errors') {
-        $Global:Error | Should Match $Matches
+        $Global:Error | Should -BeNullOrEmpty
     }
-}
 
-function ThenNoError
-{
-    param(
-    )
+    function ThenGroup
+    {
+        param(
+            $Name,
 
-    It ('should write no errors') {
-        $Global:Error | Should BeNullOrEmpty
-    }
-}
+            [String[]] $HasMember
+        )
 
-function ThenGroup
-{
-    param(
-        $Name,
-        [string[]]
-        $HasMember
-    )
+        $group = Get-LocalGroup -Name $Name
+        $group | Should -Not -BeNullOrEmpty
 
-    $HasMember = $HasMember | ForEach-Object { Resolve-IdentityName -Name $_ -NoWarn }
+        $members = Get-LocalGroupMember -Name $Name
+        $members | Should -HaveCount $HasMember.Length
 
-    $group = Get-Group -Name $Name
-    It ('should remove members') {
-
-        $group.Members.Count | Should Be $HasMember.Count
-        foreach( $currentMember in $group.Members )
+        foreach ($member in $HasMember)
         {
-            $currentMemberName = Resolve-IdentityName -SID $currentMember.Sid -NoWarn
-            $currentMemberName -in $HasMember | Should Be $true
+            Test-CLocalGroupMember -Name $Name -Member $member | Should -BeTrue
         }
-        $group.Save()
-        $group.Dispose()
+    }
+
+    function WhenRemoving
+    {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSShouldProcess', '')]
+        [CmdletBinding(SupportsShouldProcess)]
+        param(
+            $Member,
+            $FromGroup
+        )
+
+        $Global:Error.Clear()
+        Uninstall-CLocalGroupMember -Name $FromGroup -Member $Member
     }
 }
 
-function WhenRemoving
-{
-    [CmdletBinding(SupportsShouldProcess=$true)]
-    param(
-        $Member,
-        $FromGroup
-    )
+Describe 'Uninstall-CLocalGroupMember' {
+    It 'removes single member' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users'
+        WhenRemoving 'Everyone' -FromGroup 'FubarSnafu'
+        ThenGroup 'FubarSnafu' -HasMember 'Authenticated Users'
+    }
 
-    $Global:Error.Clear()
-    Remove-GroupMember -Name $FromGroup -Member $Member
-}
+    It 'removes multiple members' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users','Administrator'
+        WhenRemoving 'Everyone','Authenticated Users' -FromGroup 'FubarSnafu'
+        ThenGroup 'FubarSnafu' -HasMember 'Administrator'
+    }
 
-Describe 'Remove-GroupMember.when removing single member' {
-    Init
-    GivenGroup 'FubarSnafu' -WithMember 'one','two'
-    WhenRemoving 'one' -FromGroup 'FubarSnafu'
-    ThenGroup 'FubarSnafu' -HasMember 'two'
-}
+    It 'removes all members' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users','Administrator'
+        WhenRemoving 'Everyone','Authenticated Users','Administrator' -FromGroup 'FubarSnafu'
+        ThenGroup 'FubarSnafu' -HasMember @()
+    }
 
-Describe 'Remove-GroupMember.when removing multiple members' {
-    Init
-    GivenGroup 'FubarSnafu' -WithMember 'one','two','three'
-    WhenRemoving 'one','two' -FromGroup 'FubarSnafu'
-    ThenGroup 'FubarSnafu' -HasMember 'three'
-}
+    It 'removes user not in group' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+        WhenRemoving 'Authenticated Users' -FromGroup 'FubarSnafu'
+        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+        ThenNoError
+    }
 
-Describe 'Remove-GroupMember.when removing all members' {
-    Init
-    GivenGroup 'FubarSnafu' -WithMember 'one','two','three'
-    WhenRemoving 'one','two','three' -FromGroup 'FubarSnafu'
-    ThenGroup 'FubarSnafu' -HasMember @()
-}
+    It 'removes user that does not exist' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+        WhenRemoving 'fdfsadfdsf' -FromGroup 'FubarSnafu' -ErrorAction SilentlyContinue
+        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+        $Global:Error[0] | Should -Match 'not found'
+    }
 
-Describe 'Remove-GroupMember.when removing user not in group' {
-    Init
-    GivenGroup 'FubarSnafu' -WithMember 'one'
-    GivenUser 'two'
-    WhenRemoving 'two' -FromGroup 'FubarSnafu'
-    ThenGroup 'FubarSnafu' -HasMember 'one'
-    ThenNoError
-}
+    It 'validates group exists' {
+        WhenRemoving 'fdfsadfdsf' -FromGroup 'jkfdsjfldsf' -ErrorAction SilentlyContinue
+        $Global:Error[0] | Should -Match 'does not exist'
+    }
 
-Describe 'Remove-GroupMember.when removing user that does not exist' {
-    Init
-    GivenGroup 'FubarSnafu' -WithMember 'one'
-    WhenRemoving 'fdfsadfdsf' -FromGroup 'FubarSnafu' -ErrorAction SilentlyContinue
-    ThenGroup 'FubarSnafu' -HasMember 'one'
-    ThenError -Matches 'Identity\ ''fdfsadfdsf'' not found\.'
-}
-
-Describe 'Remove-GroupMember.when group does not exist' {
-    Init
-    WhenRemoving 'fdfsadfdsf' -FromGroup 'jkfdsjfldsf' -ErrorAction SilentlyContinue
-    ThenError -Matches 'Local\ group\ "jkfdsjfldsf" not found\.'
-}
-
-Describe 'Remove-GroupMember.when using -WhatIf switch' {
-    Init
-    GivenGroup 'FubarSnafu' -WithMember 'one','two'
-    WhenRemoving 'one' -FromGroup 'FubarSnafu' -WhatIf
-    ThenNoError
-    ThenGroup 'FubarSnafu' -HasMember 'one','two'
+    It 'supports WhatIf' {
+        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+        WhenRemoving 'Everyone' -FromGroup 'FubarSnafu' -WhatIf
+        ThenNoError
+        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+    }
 }
