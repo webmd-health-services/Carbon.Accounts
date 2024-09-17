@@ -21,51 +21,51 @@ BeforeAll {
     }
 }
 
-Describe 'Test-CIdentity' {
+Describe 'Test-CPrincipal' {
     BeforeEach {
         $Global:Error.Clear()
     }
 
     It 'finds local group' {
-        (Test-CIdentity -Name 'Administrators') | Should -BeTrue
+        (Test-CPrincipal -Name 'Administrators') | Should -BeTrue
         ThenError -IsEmpty
     }
 
     It 'finds local user' {
-        (Test-CIdentity -Name $script:username) | Should -BeTrue
+        (Test-CPrincipal -Name $script:username) | Should -BeTrue
         ThenError -IsEmpty
     }
 
     $skip = -not [Environment]::UserDomainName -or [Environment]::UserDomainName -eq 'WORKGROUP'
     It 'finds domain user' -Skip:$skip {
-        (Test-CIdentity -Name ('{0}\Administrator' -f $env:USERDOMAIN)) | Should -BeTrue
+        (Test-CPrincipal -Name ('{0}\Administrator' -f $env:USERDOMAIN)) | Should -BeTrue
         ThenError -IsEmpty
     }
 
     It 'returns security identifier' {
-        $sid = Test-CIdentity -Name $script:username -PassThru
+        $sid = Test-CPrincipal -Name $script:username -PassThru
         $sid | Should -Not -BeNullOrEmpty
-        ($sid -is [Carbon_Accounts_Identity]) | Should -BeTrue
+        ($sid -is [Carbon_Accounts_Principal]) | Should -BeTrue
         ThenError -IsEmpty
     }
 
     It 'does not find missing local user' {
-        (Test-CIdentity -Name 'IDoNotExistIHope') | Should -BeFalse
+        (Test-CPrincipal -Name 'IDoNotExistIHope') | Should -BeFalse
         ThenError -IsEmpty
     }
 
     It 'does not find missing local user with computer for domain' {
-        (Test-CIdentity -Name ('{0}\IDoNotExistIHope' -f $env:COMPUTERNAME)) | Should -BeFalse
+        (Test-CPrincipal -Name ('{0}\IDoNotExistIHope' -f $env:COMPUTERNAME)) | Should -BeFalse
         ThenError -IsEmpty
     }
 
     It 'does not find user in bad domain' {
-        (Test-CIdentity -Name 'MISSINGDOMAIN\IDoNotExistIHope' -ErrorAction SilentlyContinue) | Should -BeFalse
+        (Test-CPrincipal -Name 'MISSINGDOMAIN\IDoNotExistIHope' -ErrorAction SilentlyContinue) | Should -BeFalse
         ThenError -IsEmpty
     }
 
     It 'does not find user in current domain' {
-        (Test-CIdentity -Name ('{0}\IDoNotExistIHope' -f $env:USERDOMAIN) -ErrorAction SilentlyContinue) | Should -BeFalse
+        (Test-CPrincipal -Name ('{0}\IDoNotExistIHope' -f $env:USERDOMAIN) -ErrorAction SilentlyContinue) | Should -BeFalse
         ThenError -IsEmpty
     }
 
@@ -77,7 +77,7 @@ Describe 'Test-CIdentity' {
             $foundAUser = $false
             foreach( $user in $users )
             {
-                (Test-CIdentity -Name ('.\{0}' -f $user.SamAccountName)) | Should -BeTrue
+                (Test-CPrincipal -Name ('.\{0}' -f $user.SamAccountName)) | Should -BeTrue
                 $foundAUser = $true
             }
             $foundAUser | Should -BeTrue
@@ -90,7 +90,7 @@ Describe 'Test-CIdentity' {
     }
 
     It 'finds local system' {
-        (Test-CIdentity -Name 'LocalSystem') | Should -BeTrue
+        (Test-CPrincipal -Name 'LocalSystem') | Should -BeTrue
         ThenError -IsEmpty
     }
 }

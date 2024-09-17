@@ -1,20 +1,20 @@
 
-function Resolve-CIdentityName
+function Resolve-CPrincipalName
 {
     <#
     .SYNOPSIS
-    Determines the full, NT identity name for a user or group.
+    Determines the full, NT principal name for a user or group.
 
     .DESCRIPTION
-    `Resolve-CIdentityName` resolves a user/group name into its full, canonical name, used by the operating system. For
+    `Resolve-CPrincipalName` resolves a user/group name into its full, canonical name, used by the operating system. For
     example, the local Administrators group is actually called BUILTIN\Administrators. With a canonical username, you
     can unambiguously compare identities on objects that contain user/group information.
 
-    If unable to resolve a name into an identity, `Resolve-CIdentityName` returns nothing.
+    If unable to resolve a name into an principal, `Resolve-CPrincipalName` returns nothing.
 
-    If you want to get full identity information (domain, type, sid, etc.), use `Resolve-CIdentity`.
+    If you want to get full principal information (domain, type, sid, etc.), use `Resolve-CPrincipal`.
 
-    You can also resolve a SID into its identity name. The `SID` parameter accepts a SID in SDDL form as a `[String]`, a
+    You can also resolve a SID into its principal name. The `SID` parameter accepts a SID in SDDL form as a `[String]`, a
     `[System.Security.Principal.SecurityIdentifier]` object, or a SID in binary form as an array of bytes. If the SID no
     longer maps to an active account, you'll get the original SID in SDDL form (as a string) returned to you.
 
@@ -22,10 +22,10 @@ function Resolve-CIdentityName
     ConvertTo-CSecurityIdentifier
 
     .LINK
-    Resolve-CIdentity
+    Resolve-CPrincipal
 
     .LINK
-    Test-CIdentity
+    Test-CPrincipal
 
     .LINK
     http://msdn.microsoft.com/en-us/library/system.security.principal.securityidentifier.aspx
@@ -37,18 +37,18 @@ function Resolve-CIdentityName
     string
 
     .EXAMPLE
-    Resolve-CIdentityName -Name 'Administrators'
+    Resolve-CPrincipalName -Name 'Administrators'
 
     Returns `BUILTIN\Administrators`, the canonical name for the local Administrators group.
     #>
     [CmdletBinding(DefaultParameterSetName='ByName')]
     [OutputType([String])]
     param(
-        # The name of the identity to return.
+        # The name of the principal to return.
         [Parameter(Mandatory, ParameterSetName='ByName', Position=0)]
         [String] $Name,
 
-        # Get an identity's name from its SID. Accepts a SID in SDDL form as a `string`, a
+        # Get an principal's name from its SID. Accepts a SID in SDDL form as a `string`, a
         # `System.Security.Principal.SecurityIdentifier` object, or a SID in binary form as an array of bytes.
         [Parameter(Mandatory, ParameterSetName='BySid')]
         [Object] $SID
@@ -59,10 +59,10 @@ function Resolve-CIdentityName
 
     if ($PSCmdlet.ParameterSetName -eq 'ByName')
     {
-        return Resolve-CIdentity -Name $Name -ErrorAction Ignore | Select-Object -ExpandProperty 'FullName'
+        return Resolve-CPrincipal -Name $Name -ErrorAction Ignore | Select-Object -ExpandProperty 'FullName'
     }
 
-    $id = Resolve-CIdentity -Sid $SID -ErrorAction Ignore
+    $id = Resolve-CPrincipal -Sid $SID -ErrorAction Ignore
     if ($id)
     {
         return $id.FullName

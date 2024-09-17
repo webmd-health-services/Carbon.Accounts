@@ -37,7 +37,7 @@ Describe 'Test-CLocalGroupMember' {
     It 'should not find a non existent user' {
         $result = Test-CLocalGroupMember -Name $script:groupName -Member 'nonExistantUser' -ErrorAction SilentlyContinue
         $result | Should -BeNullOrEmpty
-        $Global:Error[0] | Should -Match 'identity.*not found'
+        $Global:Error[0] | Should -Match 'principal.*not found'
     }
 
     It 'validates group exists' {
@@ -56,8 +56,8 @@ Describe 'Test-CLocalGroupMember' {
 
     It 'supports machine prefixed account name' {
         Install-CLocalGroupMember -Name $script:groupName -Member 'Administrator'
-        $identity = Resolve-CIdentity -Name 'Administrator'
-        Test-CLocalGroupMember -Name $script:groupName -Member $identity.FullName | Should -BeTrue
+        $principal = Resolve-CPrincipal -Name 'Administrator'
+        Test-CLocalGroupMember -Name $script:groupName -Member $principal.FullName | Should -BeTrue
         $Global:Error | Should -BeNullOrEmpty
     }
 }

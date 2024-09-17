@@ -50,7 +50,7 @@ function Uninstall-CLocalGroupMember
         return
     }
 
-    $groupInfo = Resolve-CIdentity -Name $Name
+    $groupInfo = Resolve-CPrincipal -Name $Name
 
     $localGroupName = $groupInfo.Name
     $prefix = "Removing member from local group ""$($groupInfo.Name)""  "

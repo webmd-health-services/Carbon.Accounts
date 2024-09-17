@@ -51,7 +51,7 @@ function Test-CLocalGroupMember
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
     # PowerShell's local account cmdlets don't accept names with local machine name prefix.
-    $groupInfo = Resolve-CIdentity -Name $Name
+    $groupInfo = Resolve-CPrincipal -Name $Name
     if (-not $groupInfo)
     {
         Write-Error -Message "Local group ""${Name}"" does not exist." -ErrorAction $ErrorActionPreference
@@ -64,7 +64,7 @@ function Test-CLocalGroupMember
         return
     }
 
-    $principal = Resolve-CIdentity -Name $Member
+    $principal = Resolve-CPrincipal -Name $Member
     if (-not $principal)
     {
         return

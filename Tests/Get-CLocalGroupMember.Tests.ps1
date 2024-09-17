@@ -39,6 +39,6 @@ Describe 'Get-CLocalGroupMember' {
     It 'validates member' {
         $members = Get-CLocalGroupMember -Name 'Administrators' -Member 'SnafuFubar' -ErrorAction SilentlyContinue
         $members | Should -BeNullOrEmpty
-        $Global:Error[0] | Should -Match 'Identity.*not found'
+        $Global:Error[0] | Should -Match 'Principal.*not found'
     }
 }

@@ -50,7 +50,7 @@ function Install-CLocalGroupMember
         return
     }
 
-    $groupInfo = Resolve-CIdentity -Name $Name
+    $groupInfo = Resolve-CPrincipal -Name $Name
     $localGroupName = $groupInfo.Name
     $groupName = $groupInfo.FullName
 
@@ -58,15 +58,15 @@ function Install-CLocalGroupMember
 
     foreach( $_member in $Member )
     {
-        $identity = Resolve-CIdentity -Name $_member
-        if (-not $identity)
+        $principal = Resolve-CPrincipal -Name $_member
+        if (-not $principal)
         {
             continue
         }
 
-        $memberName = $identity.FullName
+        $memberName = $principal.FullName
 
-        if (Test-CLocalGroup -LiteralName $identity.Name)
+        if (Test-CLocalGroup -LiteralName $principal.Name)
         {
             $msg = "Failed to add local group ""${memberName}"" to local group ""${groupName}"" because " +
                    """${memberName}"" is a local group and Windows does not support nested local groups."
@@ -86,6 +86,6 @@ function Install-CLocalGroupMember
 
         Write-Information "${prefix}+ ${memberName}"
         $prefix = ' ' * $prefix.Length
-        Add-LocalGroupMember -Name $Name -Member $identity.FullName
+        Add-LocalGroupMember -Name $Name -Member $principal.FullName
     }
 }

@@ -7,7 +7,7 @@ function Get-CLocalGroupMember
 
     .DESCRIPTION
     The `Get-CLocalGroupMember` function gets the members of a local group. Pass the name of the group to the `Name`
-    parameter. All the group's members are returned as `Carbon_Accounts_Identity` objects.
+    parameter. All the group's members are returned as `Carbon_Accounts_Principal` objects.
 
     If you want to get a specific group member, pass its name to the `Member` parameter. If the user isn't a member of
     the group, the function writes an error and returns nothing. If you want to check if a principal is a member of a
@@ -45,7 +45,7 @@ function Get-CLocalGroupMember
     $memberToFind = $null
     if ($Member)
     {
-        $memberToFind = Resolve-CIdentity -Name $Member
+        $memberToFind = Resolve-CPrincipal -Name $Member
         if (-not $memberToFind)
         {
             return
@@ -56,7 +56,7 @@ function Get-CLocalGroupMember
     Invoke-NetApiNetLocalGroupGetMembers -LocalGroupName $group.Name -Level 0 |
         ForEach-Object {
             $sid = [Security.Principal.SecurityIdentifier]::New([IntPtr]$_.SidPtr)
-            return Resolve-CIdentity -Sid $sid -ErrorAction Ignore
+            return Resolve-CPrincipal -Sid $sid -ErrorAction Ignore
         } |
         Where-Object {
             if ($memberToFind)

@@ -33,7 +33,7 @@ Import-Module -Name (Join-Path -Path $modulesRoot -ChildPath 'PureInvoke' -Resol
                 ) `
               -Verbose:$false
 
-enum Carbon_Accounts_Identity_Type
+enum Carbon_Accounts_Principal_Type
 {
     User = 1
     Group
@@ -47,12 +47,12 @@ enum Carbon_Accounts_Identity_Type
     Label
 }
 
-class Carbon_Accounts_Identity
+class Carbon_Accounts_Principal
 {
-    Carbon_Accounts_Identity([String] $Domain,
+    Carbon_Accounts_Principal([String] $Domain,
                              [String] $Name,
                              [SecurityIdentifier]$Sid,
-                             [Carbon_Accounts_Identity_Type]$Type)
+                             [Carbon_Accounts_Principal_Type]$Type)
     {
         $this.Domain = $Domain;
         $this.Name = $Name;
@@ -74,11 +74,11 @@ class Carbon_Accounts_Identity
 
     [SecurityIdentifier] $Sid
 
-    [Carbon_Accounts_Identity_Type] $Type
+    [Carbon_Accounts_Principal_Type] $Type
 
     [bool] Equals([Object] $obj)
     {
-        if ($null -eq $obj -or $obj -isnot [Carbon_Accounts_Identity])
+        if ($null -eq $obj -or $obj -isnot [Carbon_Accounts_Principal])
         {
             return $false;
         }
