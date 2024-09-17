@@ -71,9 +71,8 @@ function Test-CLocalGroupMember
     }
 
     $existingMember =
-        Get-LocalGroupMember -Name $groupInfo.Name |
-        ForEach-Object { Resolve-CIdentityName -Name $_.Name } |
-        Where-Object { $_ -eq $principal.FullName }
+        Get-CLocalGroupMember -Name $groupInfo.Name |
+        Where-Object 'FullName' -EQ $principal.FullName
     if ($existingMember)
     {
         return $true

@@ -39,7 +39,7 @@ BeforeAll {
 
         foreach ($member in $WithMembers)
         {
-            Get-LocalGroupMember -Name $Named -Member $member | Should -Not -BeNullOrEmpty
+            Get-CLocalGroupMember -Name $Named -Member $member | Should -Not -BeNullOrEmpty
         }
     }
 

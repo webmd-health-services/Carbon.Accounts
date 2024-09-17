@@ -103,7 +103,7 @@ function Resolve-CIdentity
             Write-Error -Message "SID ""${SID}"" not found." -ErrorAction $ErrorActionPreference
             return
         }
-        return [Carbon_Accounts_Identity]::New($account.ReferencedDomainName, $account.Name, $SID, $account.Use)
+        return [Carbon_Accounts_Identity]::New($account.DomainName, $account.Name, $SID, $account.Use)
     }
 
     if ($Name.StartsWith('.\'))

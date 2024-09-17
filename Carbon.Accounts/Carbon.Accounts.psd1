@@ -78,6 +78,7 @@
     FunctionsToExport = @(
         'ConvertTo-CSecurityIdentifier',
         'Get-CLocalGroup',
+        'Get-CLocalGroupMember',
         'Install-CLocalGroup',
         'Install-CLocalGroupMember',
         'Resolve-CIdentity',
