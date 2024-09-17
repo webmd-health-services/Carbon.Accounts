@@ -9,7 +9,7 @@ BeforeAll {
 
     & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 
-    $script:username = 'CarbonTestUser1'
+    $script:username = $CarbonTestUser
 
     function ThenError
     {

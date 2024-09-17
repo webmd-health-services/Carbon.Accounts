@@ -18,7 +18,7 @@
     RootModule = 'Carbon.Accounts.psm1'
 
     # Version number of this module.
-    ModuleVersion = '1.0.0'
+    ModuleVersion = '2.0.0'
 
     # ID used to uniquely identify this module
     GUID = '4e82802a-d791-475b-9fa4-c41888276b23'
@@ -77,9 +77,16 @@
     # Functions to export from this module. Only list public function here.
     FunctionsToExport = @(
         'ConvertTo-CSecurityIdentifier',
+        'Get-CLocalGroup',
+        'Install-CLocalGroup',
+        'Install-CLocalGroupMember',
         'Resolve-CIdentity',
         'Resolve-CIdentityName',
-        'Test-CIdentity'
+        'Test-CIdentity',
+        'Test-CLocalGroup',
+        'Test-CLocalGroupMember',
+        'Uninstall-CLocalGroup',
+        'Uninstall-CLocalGroupMember'
     )
 
     # Cmdlets to export from this module. By default, you get a script module, so there are no cmdlets.

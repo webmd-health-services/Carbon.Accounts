@@ -29,3 +29,5 @@ Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'PSModules\Carbon'
 
 $username = 'CarbonTestUser1'
 Install-CUser -Credential (New-CCredential -UserName $username -Password 'P@ssw0rd!')
+
+Install-CUser -Credential (New-CCredential -UserName 'CarbonTestUser2' -Password 'P@ssw0rd!')
