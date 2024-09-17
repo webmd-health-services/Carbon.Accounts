@@ -22,7 +22,7 @@ BeforeAll {
 
         foreach ($_member in $Member)
         {
-            Get-LocalGroupMember -Name $script:groupName -Member $_member | Should -Not -BeNullOrEmpty
+            Get-CLocalGroupMember -Name $script:groupName -Member $_member | Should -Not -BeNullOrEmpty
         }
     }
 
@@ -44,8 +44,8 @@ Describe 'Install-CLocalGroupMember' {
     BeforeEach {
         $Global:Error.Clear()
 
-        Get-LocalGroupMember -Name $script:groupName |
-            ForEach-Object { Remove-LocalGroupMember -Name $script:groupName -Member $_ }
+        Get-CLocalGroupMember -Name $script:groupName |
+            ForEach-Object { Remove-LocalGroupMember -Name $script:groupName -Member $_.FullName }
     }
 
     $skip = (Test-Path -Path 'env:WHS_CI') -and $env:WHS_CI -eq 'True'
@@ -103,9 +103,9 @@ Describe 'Install-CLocalGroupMember' {
 
     It 'should not add non existent member' {
         $numMembersBefore =
-            Get-LocalGroupMember -Group $script:groupName | Measure-Object | Select-Object -ExpandProperty 'Count'
+            Get-CLocalGroupMember -Name $script:groupName | Measure-Object | Select-Object -ExpandProperty 'Count'
         Install-CLocalGroupMember -Name $script:groupName -Member 'FJFDAFJ' -ErrorAction SilentlyContinue
-        Get-LocalGroupMember -Group $script:groupName | Measure-Object | Select-Object -ExpandProperty 'Count' |
+        Get-CLocalGroupMember -Name $script:groupName | Measure-Object | Select-Object -ExpandProperty 'Count' |
             Should -Be $numMembersBefore
     }
 

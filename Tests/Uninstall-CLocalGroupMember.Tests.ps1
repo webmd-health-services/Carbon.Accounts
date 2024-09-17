@@ -47,7 +47,7 @@ BeforeAll {
         $group = Get-LocalGroup -Name $Name
         $group | Should -Not -BeNullOrEmpty
 
-        $members = Get-LocalGroupMember -Name $Name
+        $members = Get-CLocalGroupMember -Name $Name
         $members | Should -HaveCount $HasMember.Length
 
         foreach ($member in $HasMember)

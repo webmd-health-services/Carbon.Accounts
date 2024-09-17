@@ -7,7 +7,8 @@
 
 ### Upgrade Instructions
 
-New functions are not supported on PowerShell 6, so module's minimum requirement is now PowerShell 7.
+New functions are not supported on PowerShell 6, so module's minimum requirement is now PowerShell 7. Windows PowerShell
+5.1 is still supported.
 
 If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `Install-CGroup`, `Remove-CGroupMember`,
 `Test-CGroup`, `Test-CGroupMember`, and `Uninstall-CGroup`):
@@ -34,6 +35,7 @@ If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `I
 ### Added
 
 * `Get-CLocalGroup` for getting local groups. Has support for non-wildcard lookups.
+* `Get-CLocalGroupMember` for getting local group members.
 * `Install-CLocalGroup` for installing local groups.
 * `Install-CLocalGroupMember` for adding accounts to local groups.
 * `Test-CLocalGroup` for testing if local groups exist.
