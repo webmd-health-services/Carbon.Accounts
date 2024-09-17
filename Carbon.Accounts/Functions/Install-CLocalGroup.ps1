@@ -57,7 +57,7 @@ function Install-CLocalGroup
     {
         if ($Description -and $group.Description -ne $Description)
         {
-            $groupName = Resolve-CIdentityName -Name $group.Name
+            $groupName = Resolve-CPrincipalName -Name $group.Name
             $msg = "Updating local group ""${groupName}"" description.  ""$($group.Description)"" -> ""${Description}"""
             Write-Information $msg
             $group | Set-LocalGroup -Description $Description

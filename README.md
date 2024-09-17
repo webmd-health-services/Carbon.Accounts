@@ -39,9 +39,9 @@ Import-Module -Name '.\Carbon.Accounts'
 * `Get-CLocalGroup`: gets local groups.
 * `Install-CLocalGroup`: creates a new local group, or updates the settings for an existing group.
 * `Install-CLocalGroupMember`: adds a users or groups to a local group.
-* `Resolve-CIdentity`: gets domain, name, type, and SID information about a user or group.
-* `Resolve-CIdentityName`: determines the full, NT identity name for a user or group.
-* `Test-CIdentity`: Tests that a name is a valid Windows local or domain user/group.
+* `Resolve-CPrincipal`: gets domain, name, type, and SID information about a user or group.
+* `Resolve-CPrincipalName`: determines the full, NT principal name for a user or group.
+* `Test-CPrincipal`: Tests that a name is a valid Windows local or domain user/group.
 * `Test-CLocalGroup`: checks if a local group exists.
 * `Test-CLocalGroupMember`: tests if an account is a member of a local group.
 * `Uninstall-CLocalGroup`: deletes a *local* group if it exists.

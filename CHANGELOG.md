@@ -7,8 +7,17 @@
 
 ### Upgrade Instructions
 
-New functions are not supported on PowerShell 6, so module's minimum requirement is now PowerShell 7. Windows PowerShell
-5.1 is still supported.
+Dropping support for PowerShell 6. PowerShell 7 and Windows PowerShell 5.1 are still supported.
+
+Under Microsoft patterns and practices, an "identity" is user account and a "principal" is a user or group account.
+We're updating Carbon.Accounts to follow this pattern by replacing `Identity` with `Principal` in function and class
+names, and error messages.
+
+* Rename usages of function `Resolve-CIdentity` to `Resolve-CPrincipal`.
+* Rename usages of function `Resolve-CIdentityName` to `Resolve-CPrincipalName`.
+* Rename usages of function `Test-CIdentity` to `Test-CPrincipal`.
+* Rename usages of class `Carbon_Accounts_Identity` to `Carbon_Accounts_Principal`.
+* Rename usages of enum `Carbon_Accounts_Identity_Type` to `Carbon_Accounts_Principal_Type`.
 
 If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `Install-CGroup`, `Remove-CGroupMember`,
 `Test-CGroup`, `Test-CGroupMember`, and `Uninstall-CGroup`):
@@ -22,7 +31,7 @@ If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `I
 * `Install-CGroup` and `Add-CGroupMember` no longer support adding a local group to a group and writes an error instead.
   Previously, local built-in groups were allowed to be added because the underlying Windows API allowed them, but
   functionally, Windows ignores local groups in a local group. Review usages. To check if a group is a local group, use
-  `Resolve-CIdentity` and if the `Type` property on the returned object is `Alias` and the group is not a domain group,
+  `Resolve-CPrincipal` and if the `Type` property on the returned object is `Alias` and the group is not a domain group,
   it will cause an error.
 * Rename usages of `Add-CGroupMember` to `Install-CLocalGroupMember`.
 * Rename usages of `Get-CGroup` to `Get-CLocalGroup`.
@@ -31,6 +40,7 @@ If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `I
 * Rename usages of `Test-CGroup` to `Test-CLocalGroup`.
 * Rename usages of `Test-CGroupMember` to `Test-CLocalGroupMember`.
 * Rename usages of `Uninstall-CGroup` to `Uninstall-CLocalGroup`.
+
 
 ### Added
 
@@ -42,6 +52,14 @@ If migrating from Carbon's group functions (`Add-CGroupMember`, `Get-CGroup`, `I
 * `Test-CLocalGroupMember` for testing if accounts are in a local group.
 * `Uninstall-CGroup` for removing groups.
 * `Uninstall-CGroupMember` for removing accounts from a group.
+
+## Changed
+
+* Renamed function `Resolve-CIdentity` to `Resolve-CPrincipal`.
+* Renamed function `Resolve-CIdentityName` to `Resolve-CPrincipalName`.
+* Renamed function `Test-CIdentity` to `Test-CPrincipal`.
+* Renamed class `Carbon_Accounts_Identity` to `Carbon_Accounts_Principal`.
+* Renamed enum `Carbon_Accounts_Identity_Type` to `Carbon_Accounts_Principal_Type`.
 
 
 ## 1.0.0

@@ -111,7 +111,7 @@ Describe 'Install-CLocalGroupMember' {
 
     $wellKnownAccounts = @('Everyone', 'Authenticated Users', 'ANONYMOUS LOGON', 'Fax', 'NetworkService')
     It 'allows local well known group "<_>"' -ForEach $wellKnownAccounts {
-        if (-not (TEst-CIdentity -Name $_))
+        if (-not (Test-CPrincipal -Name $_))
         {
             return
         }
@@ -122,7 +122,7 @@ Describe 'Install-CLocalGroupMember' {
     }
 
     It 'allows duplicates' {
-        $admin = Resolve-CIdentity 'Administrator'
+        $admin = Resolve-CPrincipal 'Administrator'
         Install-CLocalGroupMember -Name $script:groupName -Member $admin.Name, $admin.FullName
         $Global:Error | Should -BeNullOrEmpty
     }
