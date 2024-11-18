@@ -23,9 +23,9 @@ Set-StrictMode -Version 'Latest'
 # things. A published module has its function appended to this file, while a
 # module in development has its functions in the Functions directory.
 $script:moduleRoot = $PSScriptRoot
-$modulesroot = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
+$psModulesDirPath = $script:moduleRoot
 
-Import-Module -Name (Join-Path -Path $modulesRoot -ChildPath 'PureInvoke' -Resolve) `
+Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke' -Resolve) `
               -Function @(
                     'Invoke-AdvapiLookupAccountName',
                     'Invoke-AdvapiLookupAccountSid',
