@@ -18,7 +18,7 @@
     RootModule = 'Carbon.Accounts.psm1'
 
     # Version number of this module.
-    ModuleVersion = '2.0.1'
+    ModuleVersion = '2.0.2'
 
     # ID used to uniquely identify this module
     GUID = '4e82802a-d791-475b-9fa4-c41888276b23'

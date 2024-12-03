@@ -3,7 +3,13 @@
 
 # Carbon.Accounts PowerShell Module Changelog
 
+## 2.0.2
+
+Change to layout of internal nested dependencies.
+
 ## 2.0.1
+
+> Released 19 Nov 2024
 
 Upgrading internal PureInvoke dependency to version 1.0.1, which improves behavior when multiple instances of PureInvoke
 are imported in the same PowerShell session.

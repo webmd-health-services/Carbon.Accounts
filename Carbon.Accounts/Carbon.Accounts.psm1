@@ -23,7 +23,7 @@ Set-StrictMode -Version 'Latest'
 # things. A published module has its function appended to this file, while a
 # module in development has its functions in the Functions directory.
 $script:moduleRoot = $PSScriptRoot
-$psModulesDirPath = $script:moduleRoot
+$psModulesDirPath = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
 
 Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke' -Resolve) `
               -Function @(
