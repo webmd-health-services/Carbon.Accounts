@@ -25,7 +25,8 @@ Set-StrictMode -Version 'Latest'
 $script:moduleRoot = $PSScriptRoot
 $psModulesDirPath = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
 
-Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke' -Resolve) `
+# Import the .psm1 directly because it creates one less nested scope. PowerShell has a 10 nested scope limit.
+Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke\PureInvoke.psm1' -Resolve) `
               -Function @(
                     'Invoke-AdvapiLookupAccountName',
                     'Invoke-AdvapiLookupAccountSid',

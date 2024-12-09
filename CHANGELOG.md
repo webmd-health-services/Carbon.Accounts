@@ -3,7 +3,13 @@
 
 # Carbon.Accounts PowerShell Module Changelog
 
+## 2.0.3
+
+Removing extra nested module scope.
+
 ## 2.0.2
+
+> Released 3 Dec 2024
 
 Change to layout of internal nested dependencies.
 
