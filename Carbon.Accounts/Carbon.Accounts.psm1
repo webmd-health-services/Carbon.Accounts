@@ -19,11 +19,19 @@ using namespace System.Security.Principal
 #Requires -Version 5.1
 Set-StrictMode -Version 'Latest'
 
-# Functions should use $script:moduleRoot as the relative root from which to find
-# things. A published module has its function appended to this file, while a
-# module in development has its functions in the Functions directory.
-$script:moduleRoot = $PSScriptRoot
-$psModulesDirPath = Join-Path -Path $script:moduleRoot -ChildPath 'Modules' -Resolve
+# Functions should use $script:moduleDirPath as the relative root from which to find things. A published module has its
+# function appended to this file, while a module in development has its functions in the Functions directory.
+$script:moduleDirPath = $PSScriptRoot
+$psModulesDirPath = Join-Path -Path $script:moduleDirPath -ChildPath 'Modules' -Resolve
+
+$script:moduleBinPath = Join-Path -Path $script:moduleDirPath -ChildPath 'bin' -Resolve
+$script:runningElevated = $null
+
+if (-not (Test-Path -Path 'variable:IsWindows'))
+{
+    $script:IsWindows = $true
+    $script:IsLinux = $script:IsMacOS = $false
+}
 
 # Import the .psm1 directly because it creates one less nested scope. PowerShell has a 10 nested scope limit.
 Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke\PureInvoke.psm1' -Resolve) `
@@ -51,9 +59,9 @@ enum Carbon_Accounts_Principal_Type
 class Carbon_Accounts_Principal
 {
     Carbon_Accounts_Principal([String] $Domain,
-                             [String] $Name,
-                             [SecurityIdentifier]$Sid,
-                             [Carbon_Accounts_Principal_Type]$Type)
+                              [String] $Name,
+                              [SecurityIdentifier]$Sid,
+                              [Carbon_Accounts_Principal_Type]$Type)
     {
         $this.Domain = $Domain;
         $this.Name = $Name;
@@ -98,7 +106,7 @@ class Carbon_Accounts_Principal
 # this file, so only dot-source files that exist on the file system. This allows
 # developers to work on a module without having to build it first. Grab all the
 # functions that are in their own files.
-$functionsPath = Join-Path -Path $script:moduleRoot -ChildPath 'Functions\*.ps1'
+$functionsPath = Join-Path -Path $script:moduleDirPath -ChildPath 'Functions\*.ps1'
 if( (Test-Path -Path $functionsPath) )
 {
     foreach( $functionPath in (Get-Item $functionsPath) )

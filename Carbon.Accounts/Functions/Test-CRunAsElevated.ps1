@@ -1,46 +1,94 @@
 
-function Test-CAdminPrivilege
+function Test-CRunAsElevated
 {
     <#
     .SYNOPSIS
-    Checks if the current user is an administrator or has administrative privileges.
+    Checks if the current process is running with elevated privileges.
 
     .DESCRIPTION
-    Many tools, cmdlets, and APIs require administative privileges.  Use this function to check.  Returns `True` if the current user has administrative privileges, or `False` if he doesn't.  Or she.  Or it.  
+    The `Test-CRunAsElevated` function checks if the current process is running with elevated privileges. If running
+    elevated, returns `$true`, otherwise returns `$false`. Because elevation always involves starting a new, elevated
+    process, the check is cached.
 
-    This function handles UAC and computers where UAC is disabled.
+    On Windows, attempts to run a script with the `#Requires -RunAsAdministrator` directive to check if the current
+    process is running as an administrator.
+
+    On Linux and macOS, runs `id -u` to check if the current user is root. If the `id` command doesn't exist, writes an
+    errorr and return `$false`.
+
+    This function is also aliased as `Test-CRunAsAdministrator` and `Test-CRunAsRoot`, if you want to user more
+    platform-specific names.
+
+    .LINK
+    https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/engine/Utils.cs
+
+    .LINK
+    Assert-CRunAsElevated
 
     .EXAMPLE
-    Test-CAdminPrivilege
+    Test-CRunAsElevated
 
-    Returns `True` if the current user has administrative privileges, or `False` if the user doesn't.
+    Demonstrates how to check if the current process is running with elevated privileges or not.
     #>
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
     )
-    
-    Set-StrictMode -Version 'Latest'
 
+    Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    Write-Debug -Message "Checking if current user '$($identity.Name)' has administrative privileges."
-
-    $hasElevatedPermissions = $false
-    foreach ( $group in $identity.Groups )
+    # A process is either running as an administrator or not, so we can cache the check.
+    if ($null -eq $script:runningElevated)
     {
-        if ( $group.IsValidTargetType([Security.Principal.SecurityIdentifier]) )
+        if ($IsWindows)
         {
-            $groupSid = $group.Translate([Security.Principal.SecurityIdentifier])
-            if ( $groupSid.IsWellKnown("AccountAdministratorSid") -or $groupSid.IsWellKnown("BuiltinAdministratorsSid"))
+            $numOtherErrors = $Global:Error.Count
+            try
             {
-                return $true
+                # Use PowerShell itself to check. On non-Windows the RunAsAdministrator `#Requires` directive [always
+                # returns
+                # true](https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/engine/Utils.cs#L1189-L1209),
+                # so we'll do something else on Linux.
+                & (Join-Path -Path $script:moduleDirPath -ChildPath 'bin\Assert-RunAsAdministrator.ps1' -Resolve)
+                $script:runningElevated = $true
             }
+            catch
+            {
+                $script:runningElevated = $false
+
+                $numMyErrors = $Global:Error.Count - $numOtherErrors
+                for ($count = 0 ; $count -lt $numMyErrors ; ++$count)
+                {
+                    $Global:Error.RemoveAt(0)
+                }
+            }
+        }
+        else
+        {
+            $uid = $null
+            $idCmd = Get-Command -Name 'id' -CommandType 'Application' -ErrorAction 'Ignore' | Select-Object -First 1
+            if ($idCmd)
+            {
+                $uid = & $idCmd.Path -u
+            }
+            elseif ((Test-Path -Path 'env:UID'))
+            {
+                $uid = (Get-Item -Path 'env:UID').Value
+            }
+            else
+            {
+                $msg = 'Failed to check if current user is running as administrator because neither the `id` command ' +
+                       'nor the UID environment variable exist.'
+                Write-Error -Message $msg
+            }
+
+            $script:runningElevated = ($uid -eq 0)
         }
     }
 
-    return $false
+    return ($script:runningElevated)
 }
 
-Set-Alias -Name 'Test-AdminPrivileges' -Value 'Test-CAdminPrivilege'
-
+Set-Alias -Name 'Test-CRunAsAdministrator' -Value 'Test-CRunAsElevated'
+Set-Alias -Name 'Test-CRunAsRoot' -Value 'Test-CRunAsElevated'
