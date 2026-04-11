@@ -2,6 +2,14 @@
 #Requires -Version 5.1
 Set-StrictMode -Version 'Latest'
 
+BeforeDiscovery {
+    if (-not (Test-Path -Path 'variable:IsWindows'))
+    {
+        $script:IsWindows = $true
+        $script:IsLinux = $script:IsMacOS = $false
+    }
+}
+
 BeforeAll {
     Set-StrictMode -Version 'Latest'
 
@@ -13,38 +21,50 @@ BeforeAll {
 
 Describe 'Uninstall-CLocalGroup' {
     BeforeEach {
-        Install-CLocalGroup -Name $script:groupName -Description $script:description
         $Global:Error.Clear()
     }
 
-    AfterEach {
-        Uninstall-CLocalGroup -Name $script:groupName
+    Context 'Windows' -Skip:(-not $IsWindows) {
+        BeforeEach {
+            Install-CLocalGroup -Name $script:groupName -Description $script:description
+        }
+
+        AfterEach {
+            Uninstall-CLocalGroup -Name $script:groupName
+        }
+
+        It 'deletes groups' {
+            Test-CLocalGroup -Name $script:groupName | Should -BeTrue
+            Uninstall-CLocalGroup -Name $script:groupName
+            Test-CLocalGroup -Name $script:groupName | Should -BeFalse
+        }
+
+        It 'ignores missing groups' {
+            Uninstall-CLocalGroup -Name 'fubarsnafu'
+            $Global:Error | Should -BeNullOrEmpty
+        }
+
+        It 'supports WhatIf' {
+            Uninstall-CLocalGroup -Name $script:groupName -WhatIf
+            Test-CLocalGroup -Name $script:groupName | Should -BeTrue
+        }
+
+        It 'does not support wildcards' {
+            # Make sure the test that the group exists does not use wildcards.
+            Uninstall-CLocalGroup -Name "${script:groupName}*"
+            Test-CLocalGroup -LiteralName $script:groupName | Should -BeTrue
+
+            # Make sure the command to get the group to delete use wildcards.
+            Mock -CommandName 'Test-CLocalGroup' -ModuleName 'Carbon.Accounts' -MockWith { $true }
+            Uninstall-CLocalGroup -Name "${script:groupName}*"
+            Test-CLocalGroup -LiteralName $script:groupName | Should -BeTrue
+        }
     }
 
-    It 'deletes groups' {
-        Test-CLocalGroup -Name $script:groupName | Should -BeTrue
-        Uninstall-CLocalGroup -Name $script:groupName
-        Test-CLocalGroup -Name $script:groupName | Should -BeFalse
-    }
-
-    It 'ignores missing groups' {
-        Uninstall-CLocalGroup -Name 'fubarsnafu'
-        $Global:Error | Should -BeNullOrEmpty
-    }
-
-    It 'supports WhatIf' {
-        Uninstall-CLocalGroup -Name $script:groupName -WhatIf
-        Test-CLocalGroup -Name $script:groupName | Should -BeTrue
-    }
-
-    It 'does not support wildcards' {
-        # Make sure the test that the group exists does not use wildcards.
-        Uninstall-CLocalGroup -Name "${script:groupName}*"
-        Test-CLocalGroup -LiteralName $script:groupName | Should -BeTrue
-
-        # Make sure the command to get the group to delete use wildcards.
-        Mock -CommandName 'Test-CLocalGroup' -ModuleName 'Carbon.Accounts' -MockWith { $true }
-        Uninstall-CLocalGroup -Name "${script:groupName}*"
-        Test-CLocalGroup -LiteralName $script:groupName | Should -BeTrue
+    Context 'Linux and macOS' -Skip:$IsWindows {
+        It 'fails' {
+            Uninstall-CLocalGroup -Name 'ignored' -ErrorAction SilentlyContinue
+            $Global:Error | Should -Match 'only supported on Windows'
+        }
     }
 }

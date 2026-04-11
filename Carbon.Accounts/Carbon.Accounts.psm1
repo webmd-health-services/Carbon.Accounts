@@ -33,14 +33,17 @@ if (-not (Test-Path -Path 'variable:IsWindows'))
     $script:IsLinux = $script:IsMacOS = $false
 }
 
-# Import the .psm1 directly because it creates one less nested scope. PowerShell has a 10 nested scope limit.
-Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke\PureInvoke.psm1' -Resolve) `
-              -Function @(
-                    'Invoke-AdvapiLookupAccountName',
-                    'Invoke-AdvapiLookupAccountSid',
-                    'Invoke-NetApiNetLocalGroupGetMembers'
-                ) `
-              -Verbose:$false
+if ($IsWindows)
+{
+    # Import the .psm1 directly because it creates one less nested scope. PowerShell has a 10 nested scope limit.
+    Import-Module -Name (Join-Path -Path $psModulesDirPath -ChildPath 'PureInvoke\PureInvoke.psm1' -Resolve) `
+                  -Function @(
+                        'Invoke-AdvapiLookupAccountName',
+                        'Invoke-AdvapiLookupAccountSid',
+                        'Invoke-NetApiNetLocalGroupGetMembers'
+                    ) `
+                  -Verbose:$false
+}
 
 enum Carbon_Accounts_Principal_Type
 {

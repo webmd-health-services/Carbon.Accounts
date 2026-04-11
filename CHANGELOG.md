@@ -14,6 +14,22 @@
   administrator. On Linux and macOS, checks if running as root. This function also aliased as `Test-CRunAsAdministrator`
   and `Test-CRunAsRoot`.
 
+### Changed
+
+These functions updated to write an error when run on Linux and macOS:
+
+* `Get-CLocalGroup`
+* `Get-CLocalGroupMember`
+* `Install-CLocalGroup`
+* `Install-CLocalGroupMember`
+* `Resolve-CPrincipal`
+* `Resolve-CPrincipalName`
+* `Test-CLocalGroup`
+* `Test-CLocalGroupMember`
+* `Test-CPrincipal`
+* `Uninstall-CLocalGroup`
+* `Uninstall-CLocalGroupMember`
+
 ## 2.0.3
 
 Removing extra nested module scope.

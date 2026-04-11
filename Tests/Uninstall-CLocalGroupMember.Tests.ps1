@@ -2,6 +2,14 @@
 #Requires -Version 5.1
 Set-StrictMode -Version 'Latest'
 
+BeforeDiscovery {
+    if (-not (Test-Path -Path 'variable:IsWindows'))
+    {
+        $script:IsWindows = $true
+        $script:IsLinux = $script:IsMacOS = $false
+    }
+}
+
 BeforeAll {
     Set-StrictMode -Version 'Latest'
 
@@ -71,54 +79,63 @@ BeforeAll {
 }
 
 Describe 'Uninstall-CLocalGroupMember' {
-    It 'removes single member' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users'
-        WhenRemoving 'Everyone' -FromGroup 'FubarSnafu'
-        ThenGroup 'FubarSnafu' -HasMember 'Authenticated Users'
+    Context 'Windows' -Skip:(-not $IsWindows) {
+        It 'removes single member' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users'
+            WhenRemoving 'Everyone' -FromGroup 'FubarSnafu'
+            ThenGroup 'FubarSnafu' -HasMember 'Authenticated Users'
+        }
+
+        It 'removes multiple members' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users','Administrator'
+            WhenRemoving 'Everyone','Authenticated Users' -FromGroup 'FubarSnafu'
+            ThenGroup 'FubarSnafu' -HasMember 'Administrator'
+        }
+
+        It 'removes all members' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users','Administrator'
+            WhenRemoving 'Everyone','Authenticated Users','Administrator' -FromGroup 'FubarSnafu'
+            ThenGroup 'FubarSnafu' -HasMember @()
+        }
+
+        It 'removes user not in group' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+            WhenRemoving 'Authenticated Users' -FromGroup 'FubarSnafu'
+            ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+            ThenNoError
+        }
+
+        It 'removes user that does not exist' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+            WhenRemoving 'fdfsadfdsf' -FromGroup 'FubarSnafu' -ErrorAction SilentlyContinue
+            ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+            $Global:Error[0] | Should -Match 'not found'
+        }
+
+        It 'validates group exists' {
+            WhenRemoving 'fdfsadfdsf' -FromGroup 'jkfdsjfldsf' -ErrorAction SilentlyContinue
+            $Global:Error[0] | Should -Match 'does not exist'
+        }
+
+        It 'supports WhatIf' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+            WhenRemoving 'Everyone' -FromGroup 'FubarSnafu' -WhatIf
+            ThenNoError
+            ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+        }
+
+        It 'does not support wildcards for group name' {
+            GivenGroup 'FubarSnafu' -WithMember 'Everyone'
+            WhenRemoving 'Everyone' -FromGroup 'FubarSnafu*' -ErrorAction SilentlyContinue
+            ThenGroup 'FubarSnafu' -HasMember 'Everyone'
+            ThenError -Matches 'does not exist'
+        }
     }
 
-    It 'removes multiple members' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users','Administrator'
-        WhenRemoving 'Everyone','Authenticated Users' -FromGroup 'FubarSnafu'
-        ThenGroup 'FubarSnafu' -HasMember 'Administrator'
-    }
-
-    It 'removes all members' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone','Authenticated Users','Administrator'
-        WhenRemoving 'Everyone','Authenticated Users','Administrator' -FromGroup 'FubarSnafu'
-        ThenGroup 'FubarSnafu' -HasMember @()
-    }
-
-    It 'removes user not in group' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
-        WhenRemoving 'Authenticated Users' -FromGroup 'FubarSnafu'
-        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
-        ThenNoError
-    }
-
-    It 'removes user that does not exist' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
-        WhenRemoving 'fdfsadfdsf' -FromGroup 'FubarSnafu' -ErrorAction SilentlyContinue
-        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
-        $Global:Error[0] | Should -Match 'not found'
-    }
-
-    It 'validates group exists' {
-        WhenRemoving 'fdfsadfdsf' -FromGroup 'jkfdsjfldsf' -ErrorAction SilentlyContinue
-        $Global:Error[0] | Should -Match 'does not exist'
-    }
-
-    It 'supports WhatIf' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
-        WhenRemoving 'Everyone' -FromGroup 'FubarSnafu' -WhatIf
-        ThenNoError
-        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
-    }
-
-    It 'does not support wildcards for group name' {
-        GivenGroup 'FubarSnafu' -WithMember 'Everyone'
-        WhenRemoving 'Everyone' -FromGroup 'FubarSnafu*' -ErrorAction SilentlyContinue
-        ThenGroup 'FubarSnafu' -HasMember 'Everyone'
-        ThenError -Matches 'does not exist'
+    Context 'Linux and macOS' -Skip:$IsWindows {
+        It 'fails' {
+            WhenRemoving 'ignored' -FromGroup 'ignored' -ErrorAction SilentlyContinue
+            $Global:Error | Should -Match 'only supported on Windows'
+        }
     }
 }

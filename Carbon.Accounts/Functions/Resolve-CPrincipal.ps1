@@ -87,6 +87,13 @@ function Resolve-CPrincipal
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Resolve-CPrincipal function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     if ($PSCmdlet.ParameterSetName -eq 'BySid')
     {
         $SID = ConvertTo-CSecurityIdentifier -SID $SID

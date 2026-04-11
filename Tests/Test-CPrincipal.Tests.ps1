@@ -4,6 +4,14 @@ using module '..\Carbon.Accounts'
 #Requires -Version 5.1
 Set-StrictMode -Version 'Latest'
 
+BeforeDiscovery {
+    if (-not (Test-Path -Path 'variable:IsWindows'))
+    {
+        $script:IsWindows = $true
+        $script:IsLinux = $script:IsMacOS = $false
+    }
+}
+
 BeforeAll {
     Set-StrictMode -Version 'Latest'
 
@@ -26,71 +34,80 @@ Describe 'Test-CPrincipal' {
         $Global:Error.Clear()
     }
 
-    It 'finds local group' {
-        (Test-CPrincipal -Name 'Administrators') | Should -BeTrue
-        ThenError -IsEmpty
-    }
+    Context 'Windows' -Skip:(-not $IsWindows) {
+        It 'finds local group' {
+            (Test-CPrincipal -Name 'Administrators') | Should -BeTrue
+            ThenError -IsEmpty
+        }
 
-    It 'finds local user' {
-        (Test-CPrincipal -Name $script:username) | Should -BeTrue
-        ThenError -IsEmpty
-    }
+        It 'finds local user' {
+            (Test-CPrincipal -Name $script:username) | Should -BeTrue
+            ThenError -IsEmpty
+        }
 
-    $skip = -not [Environment]::UserDomainName -or [Environment]::UserDomainName -eq 'WORKGROUP'
-    It 'finds domain user' -Skip:$skip {
-        (Test-CPrincipal -Name ('{0}\Administrator' -f $env:USERDOMAIN)) | Should -BeTrue
-        ThenError -IsEmpty
-    }
+        $skip = -not [Environment]::UserDomainName -or [Environment]::UserDomainName -eq 'WORKGROUP'
+        It 'finds domain user' -Skip:$skip {
+            (Test-CPrincipal -Name ('{0}\Administrator' -f $env:USERDOMAIN)) | Should -BeTrue
+            ThenError -IsEmpty
+        }
 
-    It 'returns security identifier' {
-        $sid = Test-CPrincipal -Name $script:username -PassThru
-        $sid | Should -Not -BeNullOrEmpty
-        ($sid -is [Carbon_Accounts_Principal]) | Should -BeTrue
-        ThenError -IsEmpty
-    }
+        It 'returns security identifier' {
+            $sid = Test-CPrincipal -Name $script:username -PassThru
+            $sid | Should -Not -BeNullOrEmpty
+            ($sid -is [Carbon_Accounts_Principal]) | Should -BeTrue
+            ThenError -IsEmpty
+        }
 
-    It 'does not find missing local user' {
-        (Test-CPrincipal -Name 'IDoNotExistIHope') | Should -BeFalse
-        ThenError -IsEmpty
-    }
+        It 'does not find missing local user' {
+            (Test-CPrincipal -Name 'IDoNotExistIHope') | Should -BeFalse
+            ThenError -IsEmpty
+        }
 
-    It 'does not find missing local user with computer for domain' {
-        (Test-CPrincipal -Name ('{0}\IDoNotExistIHope' -f $env:COMPUTERNAME)) | Should -BeFalse
-        ThenError -IsEmpty
-    }
+        It 'does not find missing local user with computer for domain' {
+            (Test-CPrincipal -Name ('{0}\IDoNotExistIHope' -f $env:COMPUTERNAME)) | Should -BeFalse
+            ThenError -IsEmpty
+        }
 
-    It 'does not find user in bad domain' {
-        (Test-CPrincipal -Name 'MISSINGDOMAIN\IDoNotExistIHope' -ErrorAction SilentlyContinue) | Should -BeFalse
-        ThenError -IsEmpty
-    }
+        It 'does not find user in bad domain' {
+            (Test-CPrincipal -Name 'MISSINGDOMAIN\IDoNotExistIHope' -ErrorAction SilentlyContinue) | Should -BeFalse
+            ThenError -IsEmpty
+        }
 
-    It 'does not find user in current domain' {
-        (Test-CPrincipal -Name ('{0}\IDoNotExistIHope' -f $env:USERDOMAIN) -ErrorAction SilentlyContinue) | Should -BeFalse
-        ThenError -IsEmpty
-    }
+        It 'does not find user in current domain' {
+            (Test-CPrincipal -Name ('{0}\IDoNotExistIHope' -f $env:USERDOMAIN) -ErrorAction SilentlyContinue) | Should -BeFalse
+            ThenError -IsEmpty
+        }
 
-    It 'finds user with dot domain' {
-        $users = Get-CUser
-        $users | Should -Not -BeNullOrEmpty
-        try
-        {
-            $foundAUser = $false
-            foreach( $user in $users )
+        It 'finds user with dot domain' {
+            $users = Get-CUser
+            $users | Should -Not -BeNullOrEmpty
+            try
             {
-                (Test-CPrincipal -Name ('.\{0}' -f $user.SamAccountName)) | Should -BeTrue
-                $foundAUser = $true
+                $foundAUser = $false
+                foreach( $user in $users )
+                {
+                    (Test-CPrincipal -Name ('.\{0}' -f $user.SamAccountName)) | Should -BeTrue
+                    $foundAUser = $true
+                }
+                $foundAUser | Should -BeTrue
             }
-            $foundAUser | Should -BeTrue
+            finally
+            {
+                $users | ForEach-Object { $_.Dispose() }
+            }
+            ThenError -IsEmpty
         }
-        finally
-        {
-            $users | ForEach-Object { $_.Dispose() }
+
+        It 'finds local system' {
+            (Test-CPrincipal -Name 'LocalSystem') | Should -BeTrue
+            ThenError -IsEmpty
         }
-        ThenError -IsEmpty
     }
 
-    It 'finds local system' {
-        (Test-CPrincipal -Name 'LocalSystem') | Should -BeTrue
-        ThenError -IsEmpty
+    Context 'Linux and macOS' -Skip:$IsWindows {
+        It 'fails' {
+            (Test-CPrincipal -Name 'ignored' -ErrorAction SilentlyContinue) | Should -BeNullOrEmpty
+            $Global:Error | Should -Match 'only supported on Windows'
+        }
     }
 }

@@ -57,6 +57,13 @@ function Resolve-CPrincipalName
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Resolve-CPrincipalName function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     if ($PSCmdlet.ParameterSetName -eq 'ByName')
     {
         return Resolve-CPrincipal -Name $Name -ErrorAction Ignore | Select-Object -ExpandProperty 'FullName'

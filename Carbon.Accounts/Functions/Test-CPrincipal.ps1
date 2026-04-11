@@ -46,6 +46,13 @@ function Test-CPrincipal
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Test-CPrincipal function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     $principal = Resolve-CPrincipal -Name $Name -ErrorAction Ignore
     if (-not $principal)
     {

@@ -43,6 +43,13 @@ function Install-CLocalGroupMember
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Install-CLocalGroupMember function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     if (-not (Test-CLocalGroup -LiteralName $Name))
     {
         $msg = "Failed to add member to local group ""${Name}"" because local group ""${Name}"" does not exist."

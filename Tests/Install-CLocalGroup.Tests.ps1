@@ -2,6 +2,14 @@
 #Requires -Version 5.1
 Set-StrictMode -Version 'Latest'
 
+BeforeDiscovery {
+    if (-not (Test-Path -Path 'variable:IsWindows'))
+    {
+        $script:IsWindows = $true
+        $script:IsLinux = $script:IsMacOS = $false
+    }
+}
+
 BeforeAll {
     Set-StrictMode -Version 'Latest'
 
@@ -56,39 +64,49 @@ BeforeAll {
 }
 
 Describe 'Install-CLocalGroup' {
-    BeforeEach {
-        $script:groupName = "Install-CLocalGroup$($script:testNum)"
-        $script:testNum += 1
-        Uninstall-CLocalGroup -Name $script:groupName
+    Context 'Windows' -Skip:(-not $IsWindows) {
+        BeforeEach {
+            $script:groupName = "Install-CLocalGroup$($script:testNum)"
+            $script:testNum += 1
+            Uninstall-CLocalGroup -Name $script:groupName
+        }
+
+        AfterEach {
+            Uninstall-CLocalGroup -Name $script:groupName
+        }
+
+        It 'creates group' {
+            WhenInstalling $script:groupName
+            ThenGroup $script:groupName -Exists
+        }
+
+        It 'sets description and members' {
+            $installArgs = @{ Description = 'fubarsnafu' ; Member = @('Everyone', 'Authenticated Users') }
+            WhenInstalling $script:groupName -WithArgs $installArgs
+            ThenGroup $script:groupName `
+                    -Exists `
+                    -WithDescription $installArgs['Description'] `
+                    -WithMembers @('Everyone', 'NT AUTHORITY\Authenticated Users')
+        }
+
+        It 'supports WhatIf' {
+            WhenInstalling $script:groupName -WithArgs @{ WhatIf = $true }
+            ThenGroup $script:groupName -Not -Exists
+        }
+
+        It 'updates description' {
+            WhenInstalling $script:groupName -WithArgs @{ Description = 'fubarsnafu' }
+            ThenGroup $script:groupName -Exists -WithDescription 'fubarsnafu'
+            WhenInstalling $script:groupName -WithArgs @{ Description = 'fubarsnafu2' }
+            ThenGroup $script:groupName -Exists -WithDescription 'fubarsnafu2'
+        }
     }
 
-    AfterEach {
-        Uninstall-CLocalGroup -Name $script:groupName
-    }
-
-    It 'creates group' {
-        WhenInstalling $script:groupName
-        ThenGroup $script:groupName -Exists
-    }
-
-    It 'sets description and members' {
-        $installArgs = @{ Description = 'fubarsnafu' ; Member = @('Everyone', 'Authenticated Users') }
-        WhenInstalling $script:groupName -WithArgs $installArgs
-        ThenGroup $script:groupName `
-                  -Exists `
-                  -WithDescription $installArgs['Description'] `
-                  -WithMembers @('Everyone', 'NT AUTHORITY\Authenticated Users')
-    }
-
-    It 'supports WhatIf' {
-        WhenInstalling $script:groupName -WithArgs @{ WhatIf = $true }
-        ThenGroup $script:groupName -Not -Exists
-    }
-
-    It 'updates description' {
-        WhenInstalling $script:groupName -WithArgs @{ Description = 'fubarsnafu' }
-        ThenGroup $script:groupName -Exists -WithDescription 'fubarsnafu'
-        WhenInstalling $script:groupName -WithArgs @{ Description = 'fubarsnafu2' }
-        ThenGroup $script:groupName -Exists -WithDescription 'fubarsnafu2'
+    Context 'Linux and macOS' -Skip:$IsWindows {
+        It 'fails' {
+            $installArgs = @{ Description = 'ignored' ; Member = @('ignored') ; ErrorAction = 'SilentlyContinue' }
+            WhenInstalling 'ignored' -WithArgs $installArgs
+            $Global:Error | Should -Match 'only supported on Windows'
+        }
     }
 }
