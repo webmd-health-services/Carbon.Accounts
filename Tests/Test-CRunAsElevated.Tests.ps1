@@ -4,12 +4,15 @@ using namespace System.Security.Principal
 Set-StrictMode -Version 'Latest'
 
 BeforeDiscovery {
-    # Unix defaults to reporting that you're running as administrator.
-    $script:isInAdminRole = $true
-    if (-not (Test-Path -Path 'variable:IsWindows') -or $IsWindows)
+    if (-not (Test-Path -Path 'variable:IsWindows'))
     {
         $script:IsWindows = $true
         $script:IsLinux = $script:IsMacOS = $false
+    }
+
+    $script:isInAdminRole = $true
+    if ($IsWindows)
+    {
         $identity = [WindowsIdentity]::GetCurrent()
         $principal = [WindowsPrincipal]::new($identity)
         $script:isInAdminRole = $principal.IsInRole([WindowsBuiltInRole]::Administrator)

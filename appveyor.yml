@@ -27,11 +27,6 @@ environment:
     job_group: pwsh
     appveyor_build_worker_image: Visual Studio 2022
 
-  # PowerShell 6 on Windows only available on Windows Server 2016 build image
-  - job_name: PowerShell 6 on Windows Server 2016
-    job_group: pwsh
-    appveyor_build_worker_image: Visual Studio 2017
-
   # Linux
   # https://www.appveyor.com/docs/linux-images-software/
   - job_name: PowerShell 7 on Ubuntu 18 "Bionic Beaver"
