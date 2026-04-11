@@ -14,10 +14,6 @@ environment:
   matrix:
   # Windows
   # https://www.appveyor.com/docs/windows-images-software/
-  - job_name: Windows PowerShell 5.1 (.NET 4.6.2) on Windows Server 2012 R2
-    job_group: ps
-    appveyor_build_worker_image: Visual Studio 2013
-
   - job_name: Windows PowerShell 5.1 on Windows Server 2016
     job_group: ps
     appveyor_build_worker_image: Visual Studio 2017
