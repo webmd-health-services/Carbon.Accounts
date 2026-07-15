@@ -50,6 +50,13 @@ function Test-CLocalGroupMember
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Test-CLocalGroupMember function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     # PowerShell's local account cmdlets don't accept names with local machine name prefix.
     $groupInfo = Resolve-CPrincipal -Name $Name
     if (-not $groupInfo)

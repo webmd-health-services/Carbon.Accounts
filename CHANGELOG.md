@@ -3,6 +3,33 @@
 
 # Carbon.Accounts PowerShell Module Changelog
 
+## 2.1.0
+
+### Added
+
+* `Assert-CRunAsElevated` for asserting that the current process is running elevated. On Windows, validates that running
+  as an administrator. On Linux, vailidates that the current user is root. This function also aliased as
+  `Assert-CRunAsAdministrator` and `Assert-CRunAsRoot`.
+* `Test-CRunAsElevated` for checking if the current process is running elevated. On Windows, checks if running as an
+  administrator. On Linux and macOS, checks if running as root. This function also aliased as `Test-CRunAsAdministrator`
+  and `Test-CRunAsRoot`.
+
+### Changed
+
+These functions updated to write an error when run on Linux and macOS:
+
+* `Get-CLocalGroup`
+* `Get-CLocalGroupMember`
+* `Install-CLocalGroup`
+* `Install-CLocalGroupMember`
+* `Resolve-CPrincipal`
+* `Resolve-CPrincipalName`
+* `Test-CLocalGroup`
+* `Test-CLocalGroupMember`
+* `Test-CPrincipal`
+* `Uninstall-CLocalGroup`
+* `Uninstall-CLocalGroupMember`
+
 ## 2.0.3
 
 Removing extra nested module scope.

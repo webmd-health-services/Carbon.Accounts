@@ -42,6 +42,13 @@ function Get-CLocalGroup
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Get-CLocalGroup function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     if (-not $Name -and -not $LiteralName)
     {
         return Get-LocalGroup

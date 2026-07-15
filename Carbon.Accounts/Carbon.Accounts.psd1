@@ -18,7 +18,7 @@
     RootModule = 'Carbon.Accounts.psm1'
 
     # Version number of this module.
-    ModuleVersion = '2.0.3'
+    ModuleVersion = '2.1.0'
 
     # ID used to uniquely identify this module
     GUID = '4e82802a-d791-475b-9fa4-c41888276b23'
@@ -76,6 +76,7 @@
 
     # Functions to export from this module. Only list public function here.
     FunctionsToExport = @(
+        'Assert-CRunAsElevated',
         'ConvertTo-CSecurityIdentifier',
         'Get-CLocalGroup',
         'Get-CLocalGroupMember',
@@ -86,6 +87,7 @@
         'Test-CPrincipal',
         'Test-CLocalGroup',
         'Test-CLocalGroupMember',
+        'Test-CRunAsElevated',
         'Uninstall-CLocalGroup',
         'Uninstall-CLocalGroupMember'
     )
@@ -97,7 +99,8 @@
     VariablesToExport = @()
 
     # Aliases to export from this module. Don't create/export aliases. It can pollute your user's sessions.
-    AliasesToExport = @()
+    AliasesToExport =
+        @('Assert-CRunAsAdministrator', 'Assert-CRunAsRoot', 'Test-CRunAsAdministrator', 'Test-CRunAsRoot')
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()

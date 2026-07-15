@@ -43,6 +43,13 @@ function Uninstall-CLocalGroupMember
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Uninstall-CLocalGroupMember function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     if (-not (Test-CLocalGroup -LiteralName $Name))
     {
         $msg = "Failed to remove members from local group ""${Name}"" because that group does not exist."

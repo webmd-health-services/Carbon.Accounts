@@ -24,6 +24,11 @@ $InformationPreference = 'Continue'
 
 prism install
 
+if ((Test-Path -Path 'variable:IsWindows') -and -not $IsWindows)
+{
+    return
+}
+
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'PSModules\Carbon' -Resolve) `
               -Function 'Install-CUser', 'New-CCredential'
 

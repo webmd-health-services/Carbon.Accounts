@@ -36,6 +36,13 @@ function Install-CLocalGroup
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    if (-not $IsWindows)
+    {
+        $msg = 'The Install-CLocalGroup function is currently only supported on Windows.'
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
+    }
+
     $group = Get-LocalGroup -Name $Name -ErrorAction Ignore
 
     if (-not $group)
