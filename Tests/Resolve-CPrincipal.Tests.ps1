@@ -8,6 +8,11 @@ BeforeDiscovery {
         $script:IsWindows = $true
         $script:IsLinux = $script:IsMacOS = $false
     }
+
+    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath '..\Carbon.Accounts' -Resolve) `
+                  -Function @('Get-CLocalGroup') `
+                  -Prefix 'T' `
+                  -Verbose:$false
 }
 
 BeforeAll {
@@ -115,6 +120,28 @@ Describe 'Resolve-CPrincipal' {
         It 'is assignable to a string' {
             [String] $principal = Resolve-CPrincipal -Name 'Administrators'
             $principal | Should -Be 'BUILTIN\Administrators'
+        }
+
+        if (Get-Command -Name 'Get-TCLocalGroup' -ErrorAction Ignore)
+        {
+            $groupNames = Get-TCLocalGroup | Select-Object -ExpandProperty 'Name'
+            It 'resolves local group <_>' -ForEach $groupNames {
+                $principal = Resolve-CPrincipal -Name $_
+                $principal | Should -Not -BeNullOrEmpty
+                Resolve-CPrincipal -Name $principal.FullName | Should -Not -BeNullOrEmpty
+                Resolve-CPrincipal -Name $principal.Name | Should -Not -BeNullOrEmpty
+            }
+        }
+
+        if (Get-Command -Name 'Get-LocalUser' -ErrorAction Ignore)
+        {
+            $userNames = Get-LocalUser | Select-Object -ExpandProperty 'Name'
+            It 'resolves local user <_>' -ForEach $userNames {
+                $principal = Resolve-CPrincipal -Name $_
+                $principal | Should -Not -BeNullOrEmpty
+                Resolve-CPrincipal -Name $principal.FullName | Should -Not -BeNullOrEmpty
+                Resolve-CPrincipal -Name $principal.Name | Should -Not -BeNullOrEmpty
+            }
         }
     }
 

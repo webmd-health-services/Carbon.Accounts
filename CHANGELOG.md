@@ -3,7 +3,13 @@
 
 # Carbon.Accounts PowerShell Module Changelog
 
+## 2.1.1
+
+Fixed: Resolve-CPrincipal returns wrong principal name for builtin System Managed Accounts Group on Windows Server 2019.
+
 ## 2.1.0
+
+> Released 15 Jul 2026
 
 ### Added
 
@@ -31,6 +37,8 @@ These functions updated to write an error when run on Linux and macOS:
 * `Uninstall-CLocalGroupMember`
 
 ## 2.0.3
+
+> Released 20 Dec 2024
 
 Removing extra nested module scope.
 
