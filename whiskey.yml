@@ -1,7 +1,7 @@
 
 Build:
 - PowerShell:
-    ExceptDuring: Clean
+    .ExceptDuring: Clean
     ScriptBlock: |
         prism install | Format-Table -Auto
         prism install -Path '.\Carbon.Accounts' | Format-Table -Auto
@@ -14,17 +14,15 @@ Build:
     IncrementPrereleaseVersion: true
 
 # Update the AppVeyor build/version number.
-- Exec:
-      OnlyBy: BuildServer
-      Path: appveyor
-      Argument: [ UpdateBuild, -Version, "$(WHISKEY_SEMVER2)+$(WHISKEY_BUILD_NUMBER)" ]
+- Exec: appveyor UpdateBuild -Version "$(WHISKEY_SEMVER2)+$(WHISKEY_BUILD_NUMBER)"
+  .OnlyBy: BuildServer
 
 # Dot-sourcing files is expensive. Move all functions into .psm1 file to improve import speed. Do this before testing
 # to ensure the module still works.
 - MergeFile:
-    OnlyBy: BuildServer
+    .OnlyBy: BuildServer
     # Builds run twice on some serves. Only run this step if the module hasn't been merged yet.
-    IfExists: Carbon.Accounts\Functions\*.ps1
+    .IfExists: Carbon.Accounts\Functions\*.ps1
     Path:
     - Carbon.Accounts\Functions\*.ps1
     DestinationPath: Carbon.Accounts\Carbon.Accounts.psm1
@@ -32,11 +30,11 @@ Build:
     TextSeparator: "$(NewLine)$(NewLine)"
 
 - PowerShell:
-    ExceptDuring: Clean
+    .ExceptDuring: Clean
     Path: init.ps1
 
 - PowerShell:
-    OnlyDuring: Clean
+    .OnlyDuring: Clean
     Path: reset.ps1
 
 - CopyFile:
@@ -55,10 +53,8 @@ Build:
     - "*.pdb"
     - "*.orig"
 
-- Exec:
-    OnlyBy: BuildServer
-    Path: appveyor
-    Argument: [ 'PushArtifact', '.output/Carbon.Accounts-$(WHISKEY_SEMVER2).zip', '-DeploymentName', 'GitHub' ]
+- Exec: appveyor PushArtifact '$(WHISKEY_OUTPUT_DIRECTORY)/Carbon.Accounts-$(WHISKEY_SEMVER2).zip' -DeploymentName 'GitHub'
+  .OnlyBy: BuildServer
 
 - Pester:
     Configuration:
@@ -76,12 +72,5 @@ Build:
 - PublishPowerShellModule:
     Path: Carbon.Accounts
 
-- Exec:
-    OnlyBy: BuildServer
-    Path: appveyor
-    Argument: [
-        'PushArtifact',
-        '.output/Carbon.Accounts.$(WHISKEY_SEMVER2_NO_BUILD_METADATA).nupkg',
-        '-DeploymentName',
-        'PowerShellGallery'
-    ]
+- Exec: appveyor PushArtifact '$(WHISKEY_OUTPUT_DIRECTORY)/Carbon.Accounts.$(WHISKEY_SEMVER2_NO_BUILD_METADATA).nupkg' -DeploymentName 'PowerShellGallery'
+  .OnlyBy: BuildServer

@@ -94,58 +94,58 @@ function Resolve-CPrincipal
         return
     }
 
-    if ($PSCmdlet.ParameterSetName -eq 'BySid')
+    if ($PSCmdlet.ParameterSetName -eq 'ByName')
     {
-        $SID = ConvertTo-CSecurityIdentifier -SID $SID
-        if (-not $SID)
+        if ($Name.StartsWith('.\'))
         {
-            return
-        }
-
-        $sidBytes = [byte[]]::New($SID.BinaryLength)
-        $SID.GetBinaryForm($sidBytes, 0)
-        $account = Invoke-AdvapiLookupAccountSid -Sid $sidBytes
-        if (-not $account)
-        {
-            Write-Error -Message "SID ""${SID}"" not found." -ErrorAction $ErrorActionPreference
-            return
-        }
-        return [Carbon_Accounts_Principal]::New($account.DomainName, $account.Name, $SID, $account.Use)
-    }
-
-    if ($Name.StartsWith('.\'))
-    {
-        $username = $Name.Substring(2)
-        $Name = "$([Environment]::MachineName)\${username}"
-        $principal = Resolve-CPrincipal -Name $Name
-        if (-not $principal)
-        {
-            $Name = "BUILTIN\${username}"
+            $username = $Name.Substring(2)
+            $Name = "$([Environment]::MachineName)\${username}"
             $principal = Resolve-CPrincipal -Name $Name
+            if (-not $principal)
+            {
+                $Name = "BUILTIN\${username}"
+                $principal = Resolve-CPrincipal -Name $Name
+            }
+            return $principal
         }
-        return $principal
+
+        if ($Name.Equals("LocalSystem", [StringComparison]::InvariantCultureIgnoreCase))
+        {
+            $Name = "NT AUTHORITY\SYSTEM"
+        }
+
+        $accountSid = Invoke-AdvapiLookupAccountName -AccountName $Name
+        if (-not $accountSid)
+        {
+            Write-Error -Message "Principal ""${Name}"" not found." -ErrorAction $ErrorActionPreference
+            return
+        }
+
+        $SID = $accountSid.Sid
     }
 
-    if ($Name.Equals("LocalSystem", [StringComparison]::InvariantCultureIgnoreCase))
+    $SID = ConvertTo-CSecurityIdentifier -SID $SID
+    if (-not $SID)
     {
-        $Name = "NT AUTHORITY\SYSTEM"
-    }
-
-    $account = Invoke-AdvapiLookupAccountName -AccountName $Name
-    if (-not $account)
-    {
-        Write-Error -Message "Principal ""${Name}"" not found." -ErrorAction $ErrorActionPreference
         return
     }
 
-    $sid = [SecurityIdentifier]::New($account.Sid, 0)
-    $ntAccount = $sid.Translate([NTAccount])
-    $domainName,$accountName = $ntAccount.Value.Split('\', 2)
-    if (-not $accountName)
+    $sidBytes = [byte[]]::New($SID.BinaryLength)
+    $SID.GetBinaryForm($sidBytes, 0)
+    $account = Invoke-AdvapiLookupAccountSid -Sid $sidBytes
+    if (-not $account)
     {
-        $accountName = $domainName
-        $domainName = ''
+        Write-Error -Message "SID ""${SID}"" not found." -ErrorAction $ErrorActionPreference
+        return
     }
-    return [Carbon_Accounts_Principal]::New($domainName, $accountName, $sid, $account.Use)
 
+    $accountName = $account.Name
+    # Bug in Windows Server 2019. Windows API returns a name for this group that can't then be resolved by
+    # LookupAccountName.
+    if ($SID -eq 'S-1-5-32-581' -and $accountName -eq 'System Managed Group')
+    {
+        $accountName = 'System Managed Accounts Group'
+    }
+
+    return [Carbon_Accounts_Principal]::New($account.DomainName, $accountName, $SID, $account.Use)
 }
